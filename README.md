@@ -1,37 +1,24 @@
 
-# 예본TeenQT 배포 가이드
+# 예본TeenQT 배포 및 운영 가이드
 
-현재 GitHub 저장소가 비어 있어 Firebase에서 인식을 못하고 있습니다. 아래 순서대로 진행해 주세요.
+코드 업로드가 완료되었습니다! 이제 Firebase에서 배포를 마무리하세요.
 
-## 0. 터미널(Terminal) 찾는 법
-1. 화면 맨 아래쪽을 보세요. **[Terminal]** 또는 **[터미널]**이라는 글자가 보입니다.
-2. 만약 안 보인다면, 키보드에서 `Ctrl` 키를 누른 상태에서 ` (숫자 1 옆의 키)를 누르세요.
-3. 검은색 입력창이 나타나면 성공입니다!
+## 1. Firebase App Hosting 마무리
+- GitHub에 파일이 올라온 것을 확인했다면, Firebase 화면을 새로고침하세요.
+- 브랜치에 `main`을 입력하면 **[다음]** 버튼이 활성화됩니다.
+- 배포가 완료될 때까지 잠시 기다려 주세요.
 
-## 1. 터미널에서 코드 전송하기 (가장 중요)
-아래 명령어들을 터미널에 한 줄씩 복사해서 입력하고 `Enter`를 치세요:
+## 2. AI 작동을 위한 필수 설정 (중요!)
+배포가 끝난 직후, 아래 설정을 하지 않으면 AI 기능이 작동하지 않습니다.
 
-```bash
-# 1. 저장소 연결 (이미 연결되어 있다는 에러가 나면 다음 단계로 넘어가세요)
-git remote add origin https://github.com/jangseik14-boop/Teen_QT.git
+1. Firebase 콘솔의 **App Hosting** 메뉴로 들어갑니다.
+2. 생성된 백엔드를 클릭하고 **Settings(설정)** 탭을 누릅니다.
+3. **Environment variables(환경 변수)** 섹션에서 **[Add variable]**을 클릭합니다.
+4. 아래 정보를 입력합니다:
+   - **Variable 이름**: `GEMINI_API_KEY`
+   - **Value**: [Google AI Studio](https://aistudio.google.com/)에서 발급받은 API 키
+5. **[Save]**를 눌러 저장합니다.
 
-# 2. 브랜치 설정
-git branch -M main
-
-# 3. 파일 업로드 준비
-git add .
-git commit -m "배포 준비 완료"
-
-# 4. GitHub로 실제 전송
-git push -u origin main
-```
-
-## 2. Firebase App Hosting 설정
-- 위 단계를 마친 후 GitHub 사이트에서 파일이 보이면 성공입니다.
-- Firebase 페이지를 **새로고침(F5)** 하세요.
-- 브랜치에 `main`을 입력하면 이제 **[다음]** 버튼이 활성화됩니다.
-
-## 3. 배포 후 꼭 해야 할 일 (AI 작동 필수!)
-배포 완료 후, App Hosting 대시보드 -> Settings -> Environment variables에서 다음을 추가하세요.
-- **Variable**: `GEMINI_API_KEY`
-- **Value**: 발급받은 API 키
+## 3. 학생들에게 링크 공유
+- 배포가 완료되면 App Hosting 대시보드 상단에 `https://...`로 시작하는 주소가 생깁니다.
+- 이 주소를 복사해서 학생들에게 공유해 주시면 됩니다! 🤘
