@@ -22,14 +22,17 @@ export default function LoginPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!username || !password) {
+    const cleanUsername = username.trim();
+
+    if (!cleanUsername || !password) {
       toast({ title: "로그인 오류", description: "아이디와 비밀번호를 입력해주세요.", variant: "destructive" });
       return;
     }
 
     setLoading(true);
-    // 내부적으로 이메일 형식을 만들어 로그인 처리
-    const internalEmail = `${username}@yebon.teen`;
+    // 한글 아이디 대응을 위한 인코딩 변환
+    const encodedId = Buffer.from(cleanUsername).toString('hex');
+    const internalEmail = `${encodedId}@yebon.teen`;
 
     try {
       await signInWithEmailAndPassword(auth, internalEmail, password);
@@ -40,6 +43,7 @@ export default function LoginPage() {
       let message = "아이디 또는 비밀번호를 확인해주세요.";
       if (error.code === 'auth/user-not-found') message = "가입되지 않은 아이디입니다.";
       if (error.code === 'auth/wrong-password') message = "비밀번호가 일치하지 않습니다.";
+      if (error.code === 'auth/invalid-email') message = "아이디 형식이 올바르지 않습니다.";
       
       toast({ title: "로그인 실패", description: message, variant: "destructive" });
       setLoading(false);

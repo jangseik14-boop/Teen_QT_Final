@@ -20,7 +20,7 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
-    username: '', // 이메일 대신 사용할 아이디
+    username: '', // 한글 포함 가능한 아이디
     role: '',
     gender: '',
     phone: '',
@@ -29,7 +29,9 @@ export default function RegisterPage() {
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.username || !formData.password || !formData.name || !formData.role || !formData.gender) {
+    const cleanUsername = formData.username.trim();
+
+    if (!cleanUsername || !formData.password || !formData.name || !formData.role || !formData.gender) {
       toast({ title: "입력 오류", description: "모든 필수 필드를 채워주세요.", variant: "destructive" });
       return;
     }
@@ -40,8 +42,12 @@ export default function RegisterPage() {
     }
 
     setLoading(true);
-    // 내부적으로 이메일 형식을 만들어 계정 생성
-    const internalEmail = `${formData.username}@yebon.teen`;
+    
+    // 이메일 형식 생성을 위한 안전한 변환 (한글 아이디 지원)
+    // Firebase Auth는 특수문자나 한글이 포함된 이메일 로컬 파트를 거부할 수 있으므로
+    // 실제 인증 이메일은 인코딩된 형식을 사용합니다.
+    const encodedId = Buffer.from(cleanUsername).toString('hex');
+    const internalEmail = `${encodedId}@yebon.teen`;
 
     try {
       // 1. Firebase Auth 계정 생성
@@ -54,7 +60,7 @@ export default function RegisterPage() {
       // 3. Firestore에 사용자 상세 프로필 저장
       await setDoc(doc(firestore, "users", user.uid), {
         id: user.uid,
-        username: formData.username,
+        username: cleanUsername, // 원본 한글 아이디 저장
         displayName: formData.name,
         email: internalEmail,
         role: formData.role,
@@ -105,7 +111,7 @@ export default function RegisterPage() {
 
               <div className="space-y-2">
                 <Input 
-                  placeholder="로그인 아이디 (영문/숫자)" 
+                  placeholder="로그인 아이디" 
                   className="h-14 bg-[#F8FAFC] border-[#F1F5F9] rounded-2xl px-6 focus-visible:ring-[#C026D3]/20"
                   value={formData.username}
                   onChange={(e) => setFormData({...formData, username: e.target.value})}
