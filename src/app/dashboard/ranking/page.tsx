@@ -7,7 +7,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { 
   Trophy, 
   Crown, 
-  Medal, 
   Star, 
   Heart,
   ChevronRight,
@@ -31,7 +30,6 @@ export default function RankingPage() {
   const { data: userProfile } = useDoc(userRef);
 
   // 누적 포인트(totalPoints) 기준 랭킹 산정을 위해 모든 사용자 가져오기
-  // (특정 필드가 없는 사용자가 누락되는 것을 방지하기 위해 정렬 없이 가져옴)
   const rankingQuery = useMemoFirebase(() => query(
     collection(firestore, "users")
   ), [firestore]);
@@ -142,8 +140,8 @@ function RankingItem({ rank, user, isMe, roleLabel }: { rank: number, user: any,
 
   const rankIcons: Record<number, React.ReactNode> = {
     1: <div className="relative animate-bounce duration-1000"><Crown className="w-8 h-8 text-white fill-white" /></div>,
-    2: <Medal className="w-7 h-7 text-white fill-white opacity-90" />,
-    3: <Medal className="w-7 h-7 text-white fill-white opacity-80" />
+    2: <Crown className="w-7 h-7 text-white fill-white opacity-95" />,
+    3: <Crown className="w-7 h-7 text-white fill-white opacity-85" />
   };
 
   return (
