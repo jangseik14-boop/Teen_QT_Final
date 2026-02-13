@@ -134,25 +134,33 @@ function RankingItem({ rank, user, isMe, roleLabel }: { rank: number, user: any,
   
   const rankColors: Record<number, string> = {
     1: "bg-gradient-to-tr from-yellow-400 via-orange-300 to-yellow-500 border-yellow-200 ring-4 ring-yellow-100 shadow-yellow-100",
-    2: "bg-gradient-to-tr from-slate-200 to-slate-400 border-slate-100 ring-4 ring-slate-50 shadow-slate-50",
-    3: "bg-gradient-to-tr from-[#92400E] to-[#451A03] border-[#78350F] ring-4 ring-orange-50 shadow-orange-50"
+    2: "bg-gradient-to-tr from-slate-200 via-slate-100 to-slate-400 border-slate-200 ring-4 ring-slate-100 shadow-slate-50",
+    3: "bg-gradient-to-tr from-[#92400E] via-[#78350F] to-[#451A03] border-[#78350F] ring-4 ring-orange-100 shadow-orange-50"
   };
 
   const rankIcons: Record<number, React.ReactNode> = {
     1: <div className="relative animate-bounce duration-1000"><Crown className="w-8 h-8 text-white fill-white" /></div>,
     2: <Crown className="w-7 h-7 text-white fill-white opacity-95" />,
-    3: <Crown className="w-7 h-7 text-orange-100 fill-orange-100 opacity-90" />
+    3: <Crown className="w-7 h-7 text-orange-200 fill-orange-200 opacity-90" />
   };
+
+  // 등수별 카드 테두리 스타일
+  const cardBorderClasses = rank === 1 
+    ? "border-4 border-yellow-200 shadow-2xl scale-[1.02]" 
+    : rank === 2 
+    ? "border-2 border-slate-300 shadow-lg ring-2 ring-slate-100" 
+    : rank === 3 
+    ? "border-2 border-[#92400E]/30 shadow-md ring-2 ring-orange-100/50" 
+    : "border-2 border-gray-50 shadow-sm";
 
   return (
     <Card className={cn(
-      "border-none rounded-[2rem] transition-all duration-500 overflow-hidden",
-      rank === 1 ? "shadow-2xl scale-[1.02]" : "shadow-sm",
-      isMe && rank !== 1 ? "ring-2 ring-purple-100" : ""
+      "border-none rounded-[2rem] transition-all duration-500 overflow-hidden bg-white",
+      isMe && rank > 3 ? "ring-2 ring-purple-100" : ""
     )}>
       <CardContent className={cn(
-        "p-5 flex items-center justify-between",
-        rank === 1 ? "bg-white border-4 border-yellow-200" : "bg-white border-2 border-gray-50"
+        "p-5 flex items-center justify-between transition-all",
+        cardBorderClasses
       )}>
         <div className="flex items-center gap-4">
           {/* Rank Badge */}
@@ -167,7 +175,7 @@ function RankingItem({ rank, user, isMe, roleLabel }: { rank: number, user: any,
           <div className="flex items-center gap-3">
             <Avatar className={cn(
               "w-12 h-12 border-2",
-              rank === 1 ? "border-yellow-200" : "border-gray-100"
+              rank === 1 ? "border-yellow-200" : rank === 2 ? "border-slate-200" : rank === 3 ? "border-orange-200" : "border-gray-100"
             )}>
               <AvatarImage src={`https://picsum.photos/seed/${user.id}/200`} />
               <AvatarFallback>{user.displayName?.[0]}</AvatarFallback>
@@ -187,7 +195,7 @@ function RankingItem({ rank, user, isMe, roleLabel }: { rank: number, user: any,
           <div className="flex items-center justify-end gap-1.5">
             <span className={cn(
               "text-lg font-black italic tracking-tighter",
-              rank === 1 ? "text-orange-500" : "text-gray-800"
+              rank === 1 ? "text-orange-500" : rank === 2 ? "text-slate-500" : rank === 3 ? "text-[#92400E]" : "text-gray-800"
             )}>
               {(user.totalPoints || 0).toLocaleString()}
             </span>
