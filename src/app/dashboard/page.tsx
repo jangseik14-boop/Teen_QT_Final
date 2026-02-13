@@ -21,7 +21,7 @@ import { useUser, useFirestore, useDoc, updateDocumentNonBlocking, setDocumentNo
 import { doc } from "firebase/firestore";
 import { generateMeditation } from "@/ai/flows/generate-meditation";
 import { toast } from "@/hooks/use-toast";
-import { getVerseForToday, BIBLE_VERSES } from "@/lib/bible-verses";
+import { getVerseForToday } from "@/lib/bible-verses";
 
 // 오늘 날짜 ID 생성 (YYYY-MM-DD)
 const getTodayId = () => new Date().toISOString().split('T')[0];
