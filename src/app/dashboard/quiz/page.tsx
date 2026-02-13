@@ -61,6 +61,18 @@ const shopItems = [
     name: "프리미엄 템플릿",
     price: "₩8,000",
     feature: "50개 이상의 독점 레이아웃"
+  },
+  {
+    id: "item-3",
+    name: "다이소 상품권",
+    price: "₩5,000",
+    feature: "다양한 사무용품 구매 가능"
+  },
+  {
+    id: "item-4",
+    name: "치킨",
+    price: "2000D",
+    feature: "맛있는 황금올리브 치킨"
   }
 ];
 
