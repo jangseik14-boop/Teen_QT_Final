@@ -1,16 +1,13 @@
+# 🚀 예본TeenQT 최종 배포 가이드
 
-# 🚀 예본TeenQT 네트리파이(Netlify) 배포 완료!
+현재 네트리파이 보안 스캐너가 빌드를 차단하는 문제를 해결하기 위해 코드가 업데이트되었습니다.
 
-현재 프로젝트가 네트리파이를 통해 성공적으로 연결되었습니다.
+### ✅ 최종 배포 절차
+1.  **코드 동기화**: 좌측의 [↑] 버튼을 눌러 **Sync**를 완료하세요.
+2.  **네트리파이 환경 변수 확인**: 네트리파이 설정 화면(Site settings > Environment variables)에 아래 3개가 정확히 있는지 확인하세요.
+    - `GEMINI_API_KEY`: `AIzaSyC2ArqCoWfqaR45OwCGKTaAeRwSZoVQjvU`
+    - `NEXT_PUBLIC_FIREBASE_PROJECT_ID`: `studio-5290180250-baff5`
+    - `NODE_VERSION`: `20`
+3.  **재배포**: 네트리파이의 **Deploys** 탭에서 **[Trigger deploy]**를 눌러 다시 빌드하세요.
 
-### ✅ 배포 확인 방법
-1. 네트리파이 대시보드에서 **"Production: main@HEAD"** 옆의 상태가 **[Published]**로 바뀌는지 기다립니다.
-2. 상태가 바뀌면 상단에 생성된 `https://ybteenqt.netlify.app` (또는 지정된 주소)로 접속합니다.
-
-### 🔑 보안 안내
-- 이전에 코드에 포함되었던 비밀번호(API 키) 파일들을 모두 삭제했습니다.
-- 이제 모든 비밀번호는 네트리파이의 **Environment variables**에서 안전하게 관리됩니다.
-
-### 🛠 유지보수
-- 코드를 수정하고 깃허브에 **[Sync]**만 하면 네트리파이가 알아서 다시 배포(업데이트)합니다.
-- 관리자 페이지 접속 비밀번호는 `141414`입니다.
+이제 보안 경고 없이 배포가 완료될 것입니다!
