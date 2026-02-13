@@ -1,7 +1,12 @@
-# Settings to manage and configure a Firebase App Hosting backend.
-# https://firebase.google.com/docs/app-hosting/configure
 
+# Firebase App Hosting 설정
 runConfig:
-  # Increase this value if you'd like to automatically spin up
-  # more instances in response to increased traffic.
-  maxInstances: 1
+  # 학생들이 한꺼번에 접속할 경우를 대비해 최소 인스턴스를 유지하거나 최대 인스턴스를 조절할 수 있습니다.
+  maxInstances: 10
+  minInstances: 0
+  memoryMiB: 512
+
+# 환경 변수 설정
+env:
+  - variable: NODE_ENV
+    value: production
