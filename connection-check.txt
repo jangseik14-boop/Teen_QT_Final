@@ -1,9 +1,10 @@
 
-최종 배포 확인용 파일 v3 (Asia-East1 리전 설정 완료)
+최종 배포 확인용 파일 v4 (Asia-East1 리전 설정 완료)
 현재 설정: 
 - Next.js 15.2.0 보안 패치 완료
 - Build Memory: 4096 MiB (증설 완료)
 - GitHub Repo: Teen_QT_Final 연결 성공
 - Target Region: asia-east1 (Taiwan)
+- Node.js Version: 20.x
 
 이 파일이 깃허브에 보인다면, 이제 파이어베이스 콘솔에서 마지막 단계까지 진행하여 배포를 완료하시면 됩니다!
