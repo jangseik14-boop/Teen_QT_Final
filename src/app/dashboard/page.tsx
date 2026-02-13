@@ -51,20 +51,31 @@ export default function DashboardPage() {
   const globalMeditationRef = useMemoFirebase(() => doc(firestore, "dailyMeditations", todayId), [firestore, todayId]);
   const { data: globalMeditation, isLoading: isGlobalLoading } = useDoc(globalMeditationRef);
 
-  // 로컬 프리셋이 있으면 즉시 표시하고, 없으면 AI 생성을 기다림
   const displayCommentary = globalMeditation?.commentary || currentVerse.preDefined?.commentary;
   const displayQ1 = globalMeditation?.q1 || currentVerse.preDefined?.q1;
   const displayQ2 = globalMeditation?.q2 || currentVerse.preDefined?.q2;
 
+  // 연도별 초기화 체크 (로그인 시 1회 실행 유도)
+  useEffect(() => {
+    if (userProfile && userRef) {
+      const currentYear = new Date().getFullYear();
+      if (!userProfile.lastResetYear || userProfile.lastResetYear < currentYear) {
+        updateDocumentNonBlocking(userRef, {
+          totalPoints: 0,
+          lastResetYear: currentYear,
+          updatedAt: new Date().toISOString()
+        });
+      }
+    }
+  }, [userProfile, userRef]);
+
   useEffect(() => {
     const fetchOrGenerateAI = async () => {
-      // 이미 글로벌 데이터가 있으면 중단 (고정값 유지)
       if (isGlobalLoading || globalMeditation?.commentary || isGenerating) return;
 
       setIsGenerating(true);
       try {
         if (currentVerse.preDefined) {
-          // 프리셋 데이터가 있다면 공통 DB에 바로 저장하여 모든 학생이 공유하게 함
           setDocumentNonBlocking(globalMeditationRef, {
             ...currentVerse.preDefined,
             verse: currentVerse.ref,
@@ -72,7 +83,6 @@ export default function DashboardPage() {
             createdAt: new Date().toISOString()
           }, { merge: true });
         } else {
-          // 프리셋이 없으면 AI가 생성하여 저장 (첫 방문자 1회만 수행)
           const result = await generateMeditation({
             verse: currentVerse.ref,
             verseText: currentVerse.text
@@ -125,8 +135,11 @@ export default function DashboardPage() {
     }, { merge: true });
 
     const currentPoints = userProfile?.points || 0;
+    const currentTotalPoints = userProfile?.totalPoints || 0;
+    
     updateDocumentNonBlocking(userRef, {
       points: currentPoints + 50,
+      totalPoints: currentTotalPoints + 50, // 누적 포인트도 함께 적립
       updatedAt: new Date().toISOString()
     });
 

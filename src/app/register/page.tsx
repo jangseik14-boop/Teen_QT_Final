@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState } from 'react';
@@ -6,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import Link from 'next/link';
+import Link from 'link';
 import { useRouter } from 'next/navigation';
 import { toast } from "@/hooks/use-toast";
 import { useAuth, useFirestore } from "@/firebase";
@@ -44,7 +45,6 @@ export default function RegisterPage() {
     setLoading(true);
     
     try {
-      // 1. 아이디 중복 확인 (보안 규칙 수정으로 이제 로그인 전에도 가능)
       const q = query(collection(firestore, "users"), where("username", "==", cleanUsername));
       const querySnapshot = await getDocs(q);
       
@@ -54,7 +54,6 @@ export default function RegisterPage() {
         return;
       }
 
-      // 2. 고유 내부 이메일 생성 (재가입이 가능하도록 랜덤 문자열 조합)
       const randomId = Math.random().toString(36).substring(2, 10);
       const internalEmail = `user-${randomId}-${Date.now()}@yebon.teen`;
 
@@ -63,7 +62,8 @@ export default function RegisterPage() {
 
       await updateProfile(user, { displayName: formData.name });
 
-      // 3. Firestore에 사용자 정보 저장
+      const currentYear = new Date().getFullYear();
+
       await setDoc(doc(firestore, "users", user.uid), {
         id: user.uid,
         username: cleanUsername,
@@ -73,6 +73,8 @@ export default function RegisterPage() {
         gender: formData.gender,
         phone: formData.phone,
         points: 0,
+        totalPoints: 0, // 누적 포인트 초기화
+        lastResetYear: currentYear, // 초기 연도 설정
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       });

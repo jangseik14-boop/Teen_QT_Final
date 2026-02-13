@@ -19,7 +19,8 @@ import {
   BookOpen,
   Trash2,
   Calendar,
-  AlertCircle
+  AlertCircle,
+  Trophy
 } from "lucide-react";
 import Link from "next/link";
 import { useFirestore, useCollection, useMemoFirebase, updateDocumentNonBlocking, deleteDocumentNonBlocking } from "@/firebase";
@@ -38,12 +39,13 @@ export default function AdminDashboardPage() {
   const firestore = useFirestore();
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [editPoints, setEditPoints] = useState<number>(0);
+  const [editTotalPoints, setEditTotalPoints] = useState<number>(0);
   const [isManageOpen, setIsManageOpen] = useState(false);
 
   // 모든 사용자 가져오기
   const usersQuery = useMemoFirebase(() => query(
     collection(firestore, "users"),
-    orderBy("points", "desc")
+    orderBy("totalPoints", "desc")
   ), [firestore]);
 
   const { data: allUsers, isLoading } = useCollection(usersQuery);
@@ -85,6 +87,7 @@ export default function AdminDashboardPage() {
   const handleManageUser = (user: any) => {
     setSelectedUser(user);
     setEditPoints(user.points || 0);
+    setEditTotalPoints(user.totalPoints || 0);
     setIsManageOpen(true);
   };
 
@@ -93,9 +96,10 @@ export default function AdminDashboardPage() {
     const userRef = doc(firestore, "users", selectedUser.id);
     updateDocumentNonBlocking(userRef, {
       points: editPoints,
+      totalPoints: editTotalPoints,
       updatedAt: new Date().toISOString()
     });
-    toast({ title: "수정 완료", description: `${selectedUser.displayName}님의 달란트가 수정되었습니다.` });
+    toast({ title: "수정 완료", description: `${selectedUser.displayName}님의 정보가 수정되었습니다.` });
     setIsManageOpen(false);
   };
 
@@ -110,15 +114,18 @@ export default function AdminDashboardPage() {
   const handleInvalidateMeditation = (meditationId: string) => {
     if (!selectedUser) return;
     
-    // 1. 포인트 회수 (최소 0점)
+    // 포인트 및 누적 포인트 회수
     const userRef = doc(firestore, "users", selectedUser.id);
     const newPoints = Math.max(0, (selectedUser.points || 0) - 50);
+    const newTotalPoints = Math.max(0, (selectedUser.totalPoints || 0) - 50);
+    
     updateDocumentNonBlocking(userRef, {
       points: newPoints,
+      totalPoints: newTotalPoints,
       updatedAt: new Date().toISOString()
     });
 
-    // 2. 묵상 기록 삭제
+    // 묵상 기록 삭제
     const medRef = doc(firestore, `users/${selectedUser.id}/meditations`, meditationId);
     deleteDocumentNonBlocking(medRef);
 
@@ -234,31 +241,24 @@ export default function AdminDashboardPage() {
               </div>
 
               {/* 달란트 설정 */}
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black text-gray-400 ml-1 uppercase tracking-wider italic">Dalant Setting (D)</Label>
-                <div className="flex items-center gap-2">
-                  <Button 
-                    variant="outline" 
-                    size="icon" 
-                    className="rounded-xl border-2 border-gray-100 shrink-0"
-                    onClick={() => setEditPoints(Math.max(0, editPoints - 50))}
-                  >
-                    <Minus className="w-4 h-4" />
-                  </Button>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black text-gray-400 ml-1 uppercase tracking-wider italic">Current (D)</Label>
                   <Input 
                     type="number"
                     value={editPoints}
                     onChange={(e) => setEditPoints(Number(e.target.value))}
-                    className="h-12 bg-gray-50 border-none rounded-xl text-center font-black text-lg focus-visible:ring-purple-400"
+                    className="h-12 bg-gray-50 border-none rounded-xl text-center font-black text-lg"
                   />
-                  <Button 
-                    variant="outline" 
-                    size="icon" 
-                    className="rounded-xl border-2 border-gray-100 shrink-0"
-                    onClick={() => setEditPoints(editPoints + 50)}
-                  >
-                    <Plus className="w-4 h-4" />
-                  </Button>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black text-purple-400 ml-1 uppercase tracking-wider italic">Total (D)</Label>
+                  <Input 
+                    type="number"
+                    value={editTotalPoints}
+                    onChange={(e) => setEditTotalPoints(Number(e.target.value))}
+                    className="h-12 bg-purple-50 border-none rounded-xl text-center font-black text-lg text-purple-700"
+                  />
                 </div>
               </div>
 
@@ -280,7 +280,7 @@ export default function AdminDashboardPage() {
                           <div className="flex justify-between items-start">
                             <div className="flex items-center gap-2 text-xs font-black text-purple-600">
                               <Calendar className="w-3 h-3" />
-                              {med.id} {/* 문서 ID가 날짜임 */}
+                              {med.id}
                             </div>
                             <AlertDialog>
                               <AlertDialogTrigger asChild>
@@ -311,10 +311,6 @@ export default function AdminDashboardPage() {
                             <div className="bg-blue-50/50 p-2.5 rounded-xl border border-blue-100/50">
                               <p className="text-[10px] font-black text-blue-600 mb-0.5">Q2. 다짐</p>
                               <p className="text-[11px] font-bold text-gray-700 leading-relaxed">{med.resolution}</p>
-                            </div>
-                            <div className="bg-purple-50/50 p-2.5 rounded-xl border border-purple-100/50">
-                              <p className="text-[10px] font-black text-purple-600 mb-0.5">기도</p>
-                              <p className="text-[11px] font-bold text-gray-700 leading-relaxed">{med.prayer}</p>
                             </div>
                           </div>
                         </CardContent>
@@ -398,7 +394,7 @@ function UserSegment({ title, users, color, onManage }: { title: string, users: 
               <div className="text-right">
                 <p className="text-xs font-black text-gray-800">{user.points?.toLocaleString()} D</p>
                 <div className="flex items-center gap-1 justify-end text-[9px] font-bold text-gray-300">
-                  <Settings2 className="w-2 h-2" /> 관리하기
+                  <Trophy className="w-2 h-2 text-purple-400" /> {(user.totalPoints || 0).toLocaleString()}
                 </div>
               </div>
             </CardContent>
