@@ -24,6 +24,16 @@ import { useUser, useFirestore, useDoc, useMemoFirebase, updateDocumentNonBlocki
 import { doc, collection } from "firebase/firestore";
 import Link from "next/link";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { 
+  AlertDialog, 
+  AlertDialogAction, 
+  AlertDialogCancel, 
+  AlertDialogContent, 
+  AlertDialogDescription, 
+  AlertDialogFooter, 
+  AlertDialogHeader, 
+  AlertDialogTitle 
+} from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
@@ -45,24 +55,32 @@ export default function VibeQuizShop() {
   const { user } = useUser();
   const firestore = useFirestore();
   const [isBuying, setIsBuying] = useState<string | null>(null);
+  const [itemToBuy, setItemToBuy] = useState<any>(null);
   const [isRequestDialogOpen, setIsRequestDialogOpen] = useState(false);
   const [requestContent, setRequestContent] = useState("");
 
   const userRef = useMemoFirebase(() => user ? doc(firestore, "users", user.uid) : null, [user, firestore]);
   const { data: userProfile } = useDoc(userRef);
 
-  const handleBuy = async (item: any) => {
+  const handleBuyClick = (item: any) => {
     if (!user || !userProfile) {
       toast({ title: "로그인 필요", description: "로그인 후 이용 가능합니다.", variant: "destructive" });
       return;
     }
-
     if ((userProfile.points || 0) < item.price) {
       toast({ title: "달란트 부족", description: "달란트가 부족합니다. 묵상을 더 열심히 해볼까요?", variant: "destructive" });
       return;
     }
+    setItemToBuy(item);
+  };
 
+  const executePurchase = async () => {
+    if (!itemToBuy || !user || !userProfile) return;
+
+    const item = itemToBuy;
     setIsBuying(item.id);
+    setItemToBuy(null);
+
     try {
       updateDocumentNonBlocking(userRef!, {
         points: (userProfile.points || 0) - item.price,
@@ -113,7 +131,6 @@ export default function VibeQuizShop() {
 
   return (
     <div className="max-w-md mx-auto bg-white min-h-screen pb-32 shadow-2xl overflow-hidden relative font-body">
-      {/* Header */}
       <header className="px-6 pt-8 pb-4 flex justify-between items-start bg-white sticky top-0 z-40 border-b border-gray-50">
         <div className="space-y-1">
           <h1 className="text-2xl font-black text-[#C026D3] tracking-tight italic">예본TeenQT</h1>
@@ -126,7 +143,6 @@ export default function VibeQuizShop() {
       </header>
 
       <div className="px-6 space-y-8 pt-6">
-        {/* 보유 달란트 배너 */}
         <div className="bg-gradient-to-br from-[#A855F7] to-[#8B5CF6] rounded-[2rem] p-8 text-white space-y-4 shadow-xl relative overflow-hidden">
           <ShoppingBag className="absolute -right-4 -bottom-4 w-32 h-32 opacity-10 rotate-12" />
           <div className="space-y-1 relative z-10">
@@ -144,7 +160,6 @@ export default function VibeQuizShop() {
           </div>
         </div>
 
-        {/* 일반 상품 그리드 */}
         <div className="space-y-4">
           <div className="flex items-center gap-2 px-1">
             <Gift className="w-5 h-5 text-gray-800" />
@@ -164,7 +179,7 @@ export default function VibeQuizShop() {
                     </h3>
                   </div>
                   <Button 
-                    onClick={() => handleBuy(item)}
+                    onClick={() => handleBuyClick(item)}
                     disabled={isBuying === item.id}
                     className="w-full rounded-xl bg-white hover:bg-cyan-50 text-cyan-600 border border-cyan-200 shadow-sm font-black text-xs h-10 transition-all active:scale-95"
                   >
@@ -176,7 +191,6 @@ export default function VibeQuizShop() {
           </div>
         </div>
 
-        {/* 특별 상품 그리드 */}
         <div className="space-y-4">
           <div className="flex items-center gap-2 px-1">
             <Star className="w-5 h-5 text-gray-800" />
@@ -196,7 +210,7 @@ export default function VibeQuizShop() {
                     </h3>
                   </div>
                   <Button 
-                    onClick={() => handleBuy(item)}
+                    onClick={() => handleBuyClick(item)}
                     disabled={isBuying === item.id}
                     className="w-full rounded-xl bg-white hover:bg-blue-50 text-blue-600 border border-blue-200 shadow-sm font-black text-xs h-10"
                   >
@@ -208,7 +222,6 @@ export default function VibeQuizShop() {
           </div>
         </div>
 
-        {/* 상품 신청 섹션 */}
         <div className="pb-10">
           <Card className="border-none bg-rose-50 rounded-[2rem] overflow-hidden">
             <CardContent className="p-6 flex items-center justify-between gap-4">
@@ -227,7 +240,29 @@ export default function VibeQuizShop() {
         </div>
       </div>
 
-      {/* 상품 신청 다이얼로그 */}
+      <AlertDialog open={!!itemToBuy} onOpenChange={(open) => !open && setItemToBuy(null)}>
+        <AlertDialogContent className="rounded-[2.5rem] max-w-[320px] p-8 border-none shadow-2xl">
+          <AlertDialogHeader className="space-y-3">
+            <div className="w-12 h-12 bg-purple-50 rounded-2xl flex items-center justify-center mx-auto mb-2">
+              <ShoppingBag className="w-6 h-6 text-purple-500" />
+            </div>
+            <AlertDialogTitle className="text-xl font-black text-center text-gray-800 tracking-tight italic">구매하시겠어요?</AlertDialogTitle>
+            <AlertDialogDescription className="text-center text-gray-400 font-bold text-sm leading-relaxed">
+              [{itemToBuy?.name}] 상품을<br/>{itemToBuy?.price.toLocaleString()} D로 구매할까요?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-col gap-2 sm:flex-row sm:gap-2">
+            <AlertDialogCancel className="w-full h-12 rounded-xl font-bold border-none bg-gray-100 hover:bg-gray-200 text-gray-500">취소</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={executePurchase}
+              className="w-full h-12 rounded-xl bg-purple-600 hover:bg-purple-700 font-black text-white shadow-lg shadow-purple-100"
+            >
+              구매하기
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <Dialog open={isRequestDialogOpen} onOpenChange={setIsRequestDialogOpen}>
         <DialogContent className="rounded-[2.5rem] max-w-[320px] p-8 border-none shadow-2xl">
           <DialogHeader className="space-y-3">
@@ -261,7 +296,6 @@ export default function VibeQuizShop() {
         </DialogContent>
       </Dialog>
 
-      {/* Bottom Nav */}
       <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white/95 backdrop-blur-md border-t-2 border-blue-100 px-6 py-4 flex justify-between items-center rounded-t-[2.5rem] z-50 shadow-[0_-10px_30px_rgba(0,0,0,0.1)]">
         <Link href="/dashboard" className="flex flex-col items-center gap-1 group text-gray-400">
           <Star className="w-6 h-6" />
