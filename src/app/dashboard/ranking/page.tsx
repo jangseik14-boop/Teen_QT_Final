@@ -135,13 +135,13 @@ function RankingItem({ rank, user, isMe, roleLabel }: { rank: number, user: any,
   const rankColors: Record<number, string> = {
     1: "bg-gradient-to-tr from-yellow-400 via-orange-300 to-yellow-500 border-yellow-200 ring-4 ring-yellow-100 shadow-yellow-100",
     2: "bg-gradient-to-tr from-slate-200 to-slate-400 border-slate-100 ring-4 ring-slate-50 shadow-slate-50",
-    3: "bg-gradient-to-tr from-amber-400 to-amber-600 border-amber-200 ring-4 ring-amber-50 shadow-amber-50"
+    3: "bg-gradient-to-tr from-[#92400E] to-[#451A03] border-[#78350F] ring-4 ring-orange-50 shadow-orange-50"
   };
 
   const rankIcons: Record<number, React.ReactNode> = {
     1: <div className="relative animate-bounce duration-1000"><Crown className="w-8 h-8 text-white fill-white" /></div>,
     2: <Crown className="w-7 h-7 text-white fill-white opacity-95" />,
-    3: <Crown className="w-7 h-7 text-white fill-white opacity-85" />
+    3: <Crown className="w-7 h-7 text-orange-100 fill-orange-100 opacity-90" />
   };
 
   return (
