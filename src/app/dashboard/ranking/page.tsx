@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useMemo } from 'react';
@@ -14,7 +13,8 @@ import {
   BookOpen,
   ShoppingBag,
   User,
-  Calendar
+  Calendar,
+  Zap
 } from "lucide-react";
 import { useFirestore, useCollection, useMemoFirebase, useUser, useDoc } from "@/firebase";
 import { collection, query, orderBy, limit, doc } from "firebase/firestore";
@@ -29,14 +29,12 @@ export default function RankingPage() {
   const userRef = useMemoFirebase(() => user ? doc(firestore, "users", user.uid) : null, [user, firestore]);
   const { data: userProfile } = useDoc(userRef);
 
-  // 누적 포인트(totalPoints) 기준 랭킹 산정을 위해 모든 사용자 가져오기
   const rankingQuery = useMemoFirebase(() => query(
     collection(firestore, "users")
   ), [firestore]);
 
   const { data: rawUsers, isLoading } = useCollection(rankingQuery);
 
-  // 메모리에서 정렬하여 상위 5명 추출
   const topUsers = useMemo(() => {
     if (!rawUsers) return null;
     return [...rawUsers]
@@ -53,7 +51,6 @@ export default function RankingPage() {
 
   return (
     <div className="max-w-md mx-auto bg-[#F8FAFC] min-h-screen pb-24 shadow-2xl overflow-hidden relative border-x border-gray-200 font-body">
-      {/* Header */}
       <header className="px-6 pt-8 pb-4 flex justify-between items-start bg-white/90 backdrop-blur-md sticky top-0 z-40 border-b border-gray-100 shadow-sm">
         <div className="space-y-1">
           <h1 className="text-2xl font-black text-[#C026D3] tracking-tight italic">예본TeenQT</h1>
@@ -68,7 +65,6 @@ export default function RankingPage() {
       </header>
 
       <div className="px-6 py-10 space-y-8 flex flex-col items-center">
-        {/* Title Section */}
         <div className="text-center space-y-2">
           <Badge className="bg-yellow-100 text-yellow-700 border-none font-black px-4 py-1 rounded-full mb-2">명예의 전당</Badge>
           <h2 className="text-3xl font-black text-[#1E1B4B] tracking-tight italic">달란트 랭킹 TOP 5</h2>
@@ -77,7 +73,6 @@ export default function RankingPage() {
           </p>
         </div>
 
-        {/* Ranking List */}
         <div className="w-full space-y-5">
           {isLoading ? (
             <div className="flex flex-col items-center py-20 gap-4">
@@ -102,16 +97,15 @@ export default function RankingPage() {
         </p>
       </div>
 
-      {/* Bottom Nav */}
       <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white/95 backdrop-blur-md border-t-2 border-blue-100 px-6 py-4 flex justify-between items-center rounded-t-[2.5rem] z-50 shadow-[0_-10px_30px_rgba(0,0,0,0.1)]">
         <Link href="/dashboard" className="flex flex-col items-center gap-1 group text-gray-400">
           <BookOpen className="w-6 h-6" />
           <span className="text-[11px] font-bold">QT</span>
         </Link>
-        <div className="flex flex-col items-center gap-1 group text-gray-400">
-          <Calendar className="w-6 h-6" />
-          <span className="text-[11px] font-bold">이벤트</span>
-        </div>
+        <Link href="/dashboard/activity" className="flex flex-col items-center gap-1 group text-gray-400">
+          <Zap className="w-6 h-6" />
+          <span className="text-[11px] font-bold">활동</span>
+        </Link>
         <Link href="/dashboard/ranking" className="flex flex-col items-center gap-1 group">
           <Trophy className="w-6 h-6 text-[#C026D3]" />
           <span className="text-[11px] font-black text-[#C026D3]">랭킹</span>
@@ -152,7 +146,6 @@ function RankingItem({ rank, user, isMe, roleLabel }: { rank: number, user: any,
     3: <Crown className="w-7 h-7 text-orange-200 fill-orange-200 opacity-90" />
   };
 
-  // 등수별 카드 테두리 스타일 및 특수 효과
   const cardClasses = rank === 1 
     ? "border-4 border-yellow-400/50 shadow-[0_20px_50px_rgba(255,223,0,0.2)] scale-[1.05] ring-4 ring-yellow-200/20 bg-gradient-to-br from-yellow-50 via-white to-orange-50 z-10" 
     : rank === 2 
@@ -178,7 +171,6 @@ function RankingItem({ rank, user, isMe, roleLabel }: { rank: number, user: any,
         rank === 1 ? "py-7" : ""
       )}>
         <div className="flex items-center gap-4">
-          {/* Rank Badge */}
           <div className={cn(
             "w-14 h-14 rounded-[1.5rem] flex items-center justify-center shrink-0 transition-transform",
             rankColors[rank] || "bg-gray-100 border-gray-50",
@@ -187,7 +179,6 @@ function RankingItem({ rank, user, isMe, roleLabel }: { rank: number, user: any,
             {rankIcons[rank] || <span className="font-black text-gray-400 text-xl">{rank}</span>}
           </div>
 
-          {/* User Info */}
           <div className="flex items-center gap-3">
             <div className="relative">
               <Avatar className={cn(
@@ -218,7 +209,6 @@ function RankingItem({ rank, user, isMe, roleLabel }: { rank: number, user: any,
           </div>
         </div>
 
-        {/* Points Display */}
         <div className="text-right">
           <div className="flex items-center justify-end gap-1.5">
             <span className={cn(

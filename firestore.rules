@@ -1,4 +1,3 @@
-
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -11,7 +10,6 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
 
-    // 관리자(교사, 교역자) 권한 체크
     function isAdmin() {
       return isSignedIn() && (
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'teacher' ||
@@ -19,39 +17,43 @@ service cloud.firestore {
       );
     }
 
-    // 사용자 프로필 및 개인 기록
     match /users/{userId} {
       allow get, list: if true;
       allow create: if isSignedIn() && request.auth.uid == userId;
       allow update: if isOwner(userId) || isAdmin();
       allow delete: if isAdmin();
       
-      // 개인 묵상 기록
       match /meditations/{meditationId} {
         allow get, list, create: if isOwner(userId);
         allow read, delete: if isAdmin();
       }
 
-      // 개인 보관함
       match /inventory/{itemId} {
         allow get, list, create, update: if isOwner(userId);
         allow read, update, delete: if isAdmin();
       }
+
+      match /activities/{activityId} {
+        allow get, list, create: if isOwner(userId);
+        allow read: if isAdmin();
+      }
     }
 
-    // 그날의 공통 말씀 해설 및 질문
     match /dailyMeditations/{dateId} {
       allow read: if true;
       allow write: if isSignedIn(); 
     }
 
-    // 상품 신청 내역
+    match /dailyQuizzes/{dateId} {
+      allow read: if true;
+      allow write: if isSignedIn();
+    }
+
     match /productRequests/{requestId} {
       allow create: if isSignedIn();
       allow read, delete: if isAdmin();
     }
 
-    // 공개된 콘텐츠
     match /publishedContents/{contentId} {
       allow read: if true;
       allow write: if false;

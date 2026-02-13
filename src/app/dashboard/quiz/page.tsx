@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState } from 'react';
@@ -16,7 +15,9 @@ import {
   Trophy,
   Smartphone,
   MessageSquare,
-  User
+  User,
+  BookOpen,
+  Zap
 } from 'lucide-react';
 import { toast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
@@ -298,15 +299,15 @@ export default function VibeQuizShop() {
 
       <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white/95 backdrop-blur-md border-t-2 border-blue-100 px-6 py-4 flex justify-between items-center rounded-t-[2.5rem] z-50 shadow-[0_-10px_30px_rgba(0,0,0,0.1)]">
         <Link href="/dashboard" className="flex flex-col items-center gap-1 group text-gray-400">
-          <Star className="w-6 h-6" />
+          <BookOpen className="w-6 h-6" />
           <span className="text-[11px] font-bold">QT</span>
         </Link>
-        <div className="flex flex-col items-center gap-1 group text-gray-400">
-          <Gift className="w-6 h-6" />
-          <span className="text-[11px] font-bold">이벤트</span>
-        </div>
+        <Link href="/dashboard/activity" className="flex flex-col items-center gap-1 group text-gray-400">
+          <Zap className="w-6 h-6" />
+          <span className="text-[11px] font-bold">활동</span>
+        </Link>
         <Link href="/dashboard/ranking" className="flex flex-col items-center gap-1 group text-gray-400">
-          <Star className="w-6 h-6" />
+          <Trophy className="w-6 h-6" />
           <span className="text-[11px] font-bold">랭킹</span>
         </Link>
         <Link href="/dashboard/quiz" className="flex flex-col items-center gap-1 group">

@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useRef } from 'react';
@@ -21,7 +20,9 @@ import {
   User as UserIcon,
   Loader2,
   Trophy,
-  Calendar
+  Calendar,
+  Zap,
+  BookOpen
 } from "lucide-react";
 import { useUser, useFirestore, useDoc, useCollection, useMemoFirebase, updateDocumentNonBlocking } from "@/firebase";
 import { doc, collection, query, where, orderBy } from "firebase/firestore";
@@ -41,7 +42,6 @@ export default function MyProfilePage() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // 상태 관리
   const [isAdminDialogOpen, setIsAdminDialogOpen] = useState(false);
   const [adminPassword, setAdminPassword] = useState("");
   const [selectedItem, setSelectedItem] = useState<any>(null);
@@ -53,7 +53,6 @@ export default function MyProfilePage() {
   const userRef = useMemoFirebase(() => user ? doc(firestore, "users", user.uid) : null, [user, firestore]);
   const { data: userProfile } = useDoc(userRef);
 
-  // 보관함 아이템 가져오기
   const inventoryQuery = useMemoFirebase(() => user ? query(
     collection(firestore, `users/${user.uid}/inventory`),
     orderBy("createdAt", "desc")
@@ -72,7 +71,6 @@ export default function MyProfilePage() {
     fileInputRef.current?.click();
   };
 
-  // 이미지 리사이징 헬퍼 함수
   const resizeImage = (file: File, maxWidth = 400, maxHeight = 400): Promise<string> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -84,8 +82,6 @@ export default function MyProfilePage() {
           const canvas = document.createElement('canvas');
           let width = img.width;
           let height = img.height;
-
-          // 가로세로 비율 유지하며 리사이징
           if (width > height) {
             if (width > maxWidth) {
               height *= maxWidth / width;
@@ -97,13 +93,10 @@ export default function MyProfilePage() {
               height = maxHeight;
             }
           }
-
           canvas.width = width;
           canvas.height = height;
           const ctx = canvas.getContext('2d');
           ctx?.drawImage(img, 0, 0, width, height);
-          
-          // 압축률 0.7 적용하여 용량 획기적으로 감소 (base64 문자열 길이 최적화)
           resolve(canvas.toDataURL('image/jpeg', 0.7));
         };
         img.onerror = reject;
@@ -115,23 +108,18 @@ export default function MyProfilePage() {
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !userRef) return;
-
     if (!file.type.startsWith('image/')) {
       toast({ title: "파일 오류", description: "이미지 파일만 업로드 가능합니다.", variant: "destructive" });
       return;
     }
-
     setIsUploading(true);
     try {
-      // 이미지 리사이징 및 압축 실행
       const resizedBase64 = await resizeImage(file);
-      
       updateDocumentNonBlocking(userRef, {
         profilePictureUrl: resizedBase64,
         updatedAt: new Date().toISOString()
       });
-      
-      toast({ title: "업로드 완료", description: "프로필 사진이 최적화되어 변경되었습니다. ✨" });
+      toast({ title: "업로드 완료", description: "프로필 사진이 변경되었습니다. ✨" });
     } catch (error) {
       console.error("이미지 처리 오류:", error);
       toast({ title: "오류 발생", description: "이미지를 처리하는 중 문제가 발생했습니다.", variant: "destructive" });
@@ -225,22 +213,13 @@ export default function MyProfilePage() {
             <button className="absolute bottom-1 right-1 bg-white p-2 rounded-full shadow-lg border border-gray-100 hover:scale-110 transition-transform">
               <Camera className="w-4 h-4 text-gray-500" />
             </button>
-            <input 
-              type="file" 
-              ref={fileInputRef} 
-              className="hidden" 
-              accept="image/*" 
-              onChange={handleImageChange}
-            />
+            <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageChange} />
           </div>
           
           <div className="text-center space-y-1">
             <h2 className="text-2xl font-black text-gray-800 tracking-tight">{userProfile?.displayName || "이름 없음"}</h2>
             <p className="text-gray-400 font-bold text-sm">{roleLabels[userProfile?.role || ""] || "일반 멤버"}</p>
-            <button 
-              onClick={handleLogout}
-              className="flex items-center gap-1 mx-auto text-gray-300 hover:text-gray-500 transition-colors pt-2"
-            >
+            <button onClick={handleLogout} className="flex items-center gap-1 mx-auto text-gray-300 hover:text-gray-500 transition-colors pt-2">
               <LogOut className="w-4 h-4" />
               <span className="text-[13px] font-bold tracking-tight">로그아웃</span>
             </button>
@@ -269,26 +248,18 @@ export default function MyProfilePage() {
                 사용 가능 {availableItems.length}개
               </Badge>
             </div>
-
             <div className="space-y-3 min-h-[100px]">
               {availableItems.length > 0 ? availableItems.map((item: any) => (
                 <Card key={item.id} className="border-none shadow-sm rounded-3xl overflow-hidden bg-white group hover:scale-[1.01] transition-transform">
                   <CardContent className="p-4 flex items-center justify-between">
                     <div className="flex items-center gap-4">
-                      <div className="bg-pink-50 p-3 rounded-2xl">
-                        <Gift className="text-pink-500 w-5 h-5" />
-                      </div>
+                      <div className="bg-pink-50 p-3 rounded-2xl"><Gift className="text-pink-500 w-5 h-5" /></div>
                       <div>
                         <p className="font-black text-[15px] text-gray-800">{item.name}</p>
                         <p className="text-gray-400 text-xs font-bold">교환 가능</p>
                       </div>
                     </div>
-                    <Button 
-                      onClick={() => handleRedeemClick(item)}
-                      className="rounded-xl bg-[#FDF4FF] text-[#C026D3] hover:bg-[#FAE8FF] font-black h-9 px-4 text-xs border border-pink-100 shadow-sm"
-                    >
-                      교환하기
-                    </Button>
+                    <Button onClick={() => handleRedeemClick(item)} className="rounded-xl bg-[#FDF4FF] text-[#C026D3] hover:bg-[#FAE8FF] font-black h-9 px-4 text-xs border border-pink-100 shadow-sm">교환하기</Button>
                   </CardContent>
                 </Card>
               )) : (
@@ -302,13 +273,9 @@ export default function MyProfilePage() {
         </div>
 
         <div className="space-y-2">
-          <button 
-            onClick={() => setShowUsedHistory(!showUsedHistory)}
-            className="w-full flex items-center justify-center gap-2 text-gray-400 font-bold text-sm py-2 hover:text-gray-600 transition-colors"
-          >
+          <button onClick={() => setShowUsedHistory(!showUsedHistory)} className="w-full flex items-center justify-center gap-2 text-gray-400 font-bold text-sm py-2 hover:text-gray-600 transition-colors">
             사용 완료 내역 보기 {showUsedHistory ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
           </button>
-          
           {showUsedHistory && (
             <div className="space-y-3 animate-in slide-in-from-top-2 duration-300">
               {usedItems.length > 0 ? usedItems.map((item: any) => (
@@ -322,9 +289,7 @@ export default function MyProfilePage() {
                   </div>
                   <Badge variant="outline" className="text-gray-400 text-[10px]">교환완료</Badge>
                 </div>
-              )) : (
-                <p className="text-center py-4 text-xs font-bold text-gray-300">내역이 없습니다.</p>
-              )}
+              )) : <p className="text-center py-4 text-xs font-bold text-gray-300">내역이 없습니다.</p>}
             </div>
           )}
         </div>
@@ -333,74 +298,40 @@ export default function MyProfilePage() {
       <Dialog open={isAdminDialogOpen} onOpenChange={setIsAdminDialogOpen}>
         <DialogContent className="rounded-[2.5rem] max-w-[320px] p-8 border-none shadow-2xl">
           <DialogHeader className="space-y-3">
-            <div className="w-12 h-12 bg-rose-50 rounded-2xl flex items-center justify-center mx-auto mb-2">
-              <Lock className="w-6 h-6 text-rose-500" />
-            </div>
+            <div className="w-12 h-12 bg-rose-50 rounded-2xl flex items-center justify-center mx-auto mb-2"><Lock className="w-6 h-6 text-rose-500" /></div>
             <DialogTitle className="text-xl font-black text-center text-gray-800 tracking-tight italic">교환 확인</DialogTitle>
-            <DialogDescription className="text-center text-gray-400 font-bold text-sm leading-relaxed">
-              선생님께 이 화면을 보여드리고<br/>비밀번호를 입력해주세요.
-            </DialogDescription>
+            <DialogDescription className="text-center text-gray-400 font-bold text-sm leading-relaxed">선생님께 이 화면을 보여드리고<br/>비밀번호를 입력해주세요.</DialogDescription>
           </DialogHeader>
           <div className="py-4">
-            <Input 
-              type="password"
-              placeholder="비밀번호"
-              value={adminPassword}
-              onChange={(e) => setAdminPassword(e.target.value)}
-              className="h-14 bg-gray-50 border-none rounded-2xl text-center text-2xl tracking-[1em] font-black focus-visible:ring-rose-400"
-            />
+            <Input type="password" placeholder="비밀번호" value={adminPassword} onChange={(e) => setAdminPassword(e.target.value)} className="h-14 bg-gray-50 border-none rounded-2xl text-center text-2xl tracking-[1em] font-black focus-visible:ring-rose-400" />
           </div>
-          <DialogFooter>
-            <Button 
-              onClick={handleAdminAuth}
-              className="w-full h-14 rounded-2xl bg-rose-500 hover:bg-rose-600 font-black text-lg shadow-lg shadow-rose-100"
-            >
-              교환 완료하기
-            </Button>
-          </DialogFooter>
+          <DialogFooter><Button onClick={handleAdminAuth} className="w-full h-14 rounded-2xl bg-rose-500 hover:bg-rose-600 font-black text-lg shadow-lg shadow-rose-100">교환 완료하기</Button></DialogFooter>
         </DialogContent>
       </Dialog>
 
       <Dialog open={isAdminEntryDialogOpen} onOpenChange={setIsAdminEntryDialogOpen}>
         <DialogContent className="rounded-[2.5rem] max-w-[320px] p-8 border-none shadow-2xl">
           <DialogHeader className="space-y-3">
-            <div className="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center mx-auto mb-2">
-              <ShieldCheck className="w-6 h-6 text-blue-500" />
-            </div>
+            <div className="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center mx-auto mb-2"><ShieldCheck className="w-6 h-6 text-blue-500" /></div>
             <DialogTitle className="text-xl font-black text-center text-gray-800 tracking-tight italic">관리자 인증</DialogTitle>
-            <DialogDescription className="text-center text-gray-400 font-bold text-sm leading-relaxed">
-              관리자 모드에 진입하기 위해<br/>비밀번호를 입력해주세요.
-            </DialogDescription>
+            <DialogDescription className="text-center text-gray-400 font-bold text-sm leading-relaxed">관리자 모드에 진입하기 위해<br/>비밀번호를 입력해주세요.</DialogDescription>
           </DialogHeader>
           <div className="py-4">
-            <Input 
-              type="password"
-              placeholder="비밀번호"
-              value={entryPassword}
-              onChange={(e) => setEntryPassword(e.target.value)}
-              className="h-14 bg-gray-50 border-none rounded-2xl text-center text-2xl tracking-[1em] font-black focus-visible:ring-blue-400"
-            />
+            <Input type="password" placeholder="비밀번호" value={entryPassword} onChange={(e) => setEntryPassword(e.target.value)} className="h-14 bg-gray-50 border-none rounded-2xl text-center text-2xl tracking-[1em] font-black focus-visible:ring-blue-400" />
           </div>
-          <DialogFooter>
-            <Button 
-              onClick={handleAdminEntryAuth}
-              className="w-full h-14 rounded-2xl bg-blue-600 hover:bg-blue-700 font-black text-lg shadow-lg shadow-blue-100"
-            >
-              인증 완료
-            </Button>
-          </DialogFooter>
+          <DialogFooter><Button onClick={handleAdminEntryAuth} className="w-full h-14 rounded-2xl bg-blue-600 hover:bg-blue-700 font-black text-lg shadow-lg shadow-blue-100">인증 완료</Button></DialogFooter>
         </DialogContent>
       </Dialog>
 
       <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white/95 backdrop-blur-md border-t-2 border-blue-100 px-6 py-4 flex justify-between items-center rounded-t-[2.5rem] z-50 shadow-[0_-10px_30px_rgba(0,0,0,0.1)]">
         <Link href="/dashboard" className="flex flex-col items-center gap-1 group text-gray-400">
-          <CreditCard className="w-6 h-6" />
+          <BookOpen className="w-6 h-6" />
           <span className="text-[11px] font-bold">QT</span>
         </Link>
-        <div className="flex flex-col items-center gap-1 group text-gray-400">
-          <Calendar className="w-6 h-6" />
-          <span className="text-[11px] font-bold">이벤트</span>
-        </div>
+        <Link href="/dashboard/activity" className="flex flex-col items-center gap-1 group text-gray-400">
+          <Zap className="w-6 h-6" />
+          <span className="text-[11px] font-bold">활동</span>
+        </Link>
         <Link href="/dashboard/ranking" className="flex flex-col items-center gap-1 group text-gray-400">
           <Trophy className="w-6 h-6" />
           <span className="text-[11px] font-bold">랭킹</span>

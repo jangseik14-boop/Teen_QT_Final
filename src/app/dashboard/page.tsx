@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -17,7 +16,8 @@ import {
   CheckCircle2,
   Calendar,
   Heart,
-  HelpCircle
+  HelpCircle,
+  Zap
 } from "lucide-react";
 import Link from "next/link";
 import { useUser, useFirestore, useDoc, updateDocumentNonBlocking, setDocumentNonBlocking, useMemoFirebase } from "@/firebase";
@@ -55,7 +55,6 @@ export default function DashboardPage() {
   const displayQ1 = globalMeditation?.q1 || currentVerse.preDefined?.q1;
   const displayQ2 = globalMeditation?.q2 || currentVerse.preDefined?.q2;
 
-  // 연도별 초기화 체크 (로그인 시 1회 실행 유도)
   useEffect(() => {
     if (userProfile && userRef) {
       const currentYear = new Date().getFullYear();
@@ -139,7 +138,7 @@ export default function DashboardPage() {
     
     updateDocumentNonBlocking(userRef, {
       points: currentPoints + 50,
-      totalPoints: currentTotalPoints + 50, // 누적 포인트도 함께 적립
+      totalPoints: currentTotalPoints + 50,
       updatedAt: new Date().toISOString()
     });
 
@@ -332,10 +331,10 @@ export default function DashboardPage() {
           <BookOpen className="w-6 h-6 text-[#C026D3]" />
           <span className="text-[11px] font-black text-[#C026D3]">QT</span>
         </Link>
-        <div className="flex flex-col items-center gap-1 group text-gray-400">
-          <Calendar className="w-6 h-6" />
-          <span className="text-[11px] font-bold">이벤트</span>
-        </div>
+        <Link href="/dashboard/activity" className="flex flex-col items-center gap-1 group text-gray-400">
+          <Zap className="w-6 h-6" />
+          <span className="text-[11px] font-bold">활동</span>
+        </Link>
         <Link href="/dashboard/ranking" className="flex flex-col items-center gap-1 group text-gray-400 hover:text-[#C026D3] transition-colors">
           <Trophy className="w-6 h-6" />
           <span className="text-[11px] font-bold">랭킹</span>
