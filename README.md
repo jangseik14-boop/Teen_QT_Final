@@ -1,17 +1,22 @@
 
-# 🚀 예본TeenQT 배포 최종 성공 가이드 (보안 패치 완료)
+# 🚀 예본TeenQT 배포 및 실행 가이드
 
-네트리파이의 최신 보안 정책에 맞춰 Next.js를 가장 안전한 버전인 **15.4.5**로 업데이트했습니다.
+### 🛠️ 실행 오류 해결법 (Invalid API Key)
+현재 브라우저에 `auth/invalid-api-key` 오류가 뜬다면, 네트리파이(Netlify) 설정에 값이 빠져있는 것입니다.
 
-### ✅ 빌드 중 주의사항 (꼭 읽어주세요!)
-빌드 로그(검은 화면)에서 아래와 같은 메시지가 보인다면 **성공**하고 있는 것입니다:
-- `▲ Next.js 15.4.5`: 보안 버전이 잘 적용됨.
-- `⚠ No build cache found`: **정상입니다!** 캐시 없이 새로 빌드할 때 뜨는 안내 메시지일 뿐입니다.
-- `Creating an optimized production build`: 앱을 만드는 중이니 **2~3분만 기다려 주세요.**
+**1. 네트리파이 사이트 설정(Site Settings)으로 이동**
+**2. Environment Variables 메뉴 클릭**
+**3. 아래 3가지 값을 추가하세요:**
+   - `NEXT_PUBLIC_FIREBASE_PROJECT_ID`: `studio-5290180250-baff5`
+   - `NEXT_PUBLIC_FIREBASE_API_KEY`: (사용자님의 파이어베이스 API 키)
+   - `NEXT_PUBLIC_FIREBASE_APP_ID`: (사용자님의 파이어베이스 App ID)
 
-### 🔑 환경 변수 체크 (Netlify Settings)
-- `GEMINI_API_KEY`: 사용자님의 키
-- `NEXT_PUBLIC_FIREBASE_PROJECT_ID`: `studio-5290180250-baff5`
-- `NODE_VERSION`: `20`
+**4. 값을 추가한 후, [Trigger deploy] -> [Deploy project without cache] 버튼을 눌러 다시 배포하세요.**
 
-위의 설정이 되어 있다면 잠시 후 사이트 주소가 나타날 것입니다. 고생 많으셨습니다!
+### ✅ 현재 적용된 상태
+- Next.js 버전: **15.4.7** (최신 보안 패치 및 안정화 버전)
+- Firebase 초기화 로직 강화 (API Key 누락 시 안내 메시지 출력)
+- 깃허브 동기화 오류 발생 시: 에디터 왼쪽 하단의 깃허브 아이콘을 클릭하여 연결 상태를 확인해 주세요.
+
+### 💡 팁
+- 깃허브 연동이 안 된다면, 잠시 기다렸다가 페이지를 새로고침(F5)한 뒤 다시 **[↑] (Sync)** 버튼을 눌러보세요.
