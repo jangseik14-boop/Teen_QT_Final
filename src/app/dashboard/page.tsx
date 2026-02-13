@@ -16,7 +16,8 @@ import {
   Loader2,
   CheckCircle2,
   Calendar,
-  Heart
+  Heart,
+  HelpCircle
 } from "lucide-react";
 import Link from "next/link";
 import { useUser, useFirestore, useDoc, updateDocumentNonBlocking, setDocumentNonBlocking, useMemoFirebase } from "@/firebase";
@@ -24,6 +25,7 @@ import { doc } from "firebase/firestore";
 import { generateMeditation } from "@/ai/flows/generate-meditation";
 import { toast } from "@/hooks/use-toast";
 import { getVerseForToday } from "@/lib/bible-verses";
+import { Separator } from "@/components/ui/separator";
 
 // 오늘 날짜 ID 생성 (YYYY-MM-DD)
 const getTodayId = () => new Date().toISOString().split('T')[0];
@@ -218,56 +220,51 @@ export default function DashboardPage() {
           </div>
         ) : (
           <div className="space-y-8">
-            {/* Q1 섹션 */}
+            {/* 오늘의 질문 통합 섹션 */}
             <div className="space-y-3">
               <div className="flex items-center gap-2 px-1">
                 <div className="w-1.5 h-6 bg-[#F59E0B] rounded-full" />
                 <h3 className="font-black text-lg text-gray-800 flex items-center gap-2 italic">
-                  Q1. 묵상하기
+                  오늘의 질문 <HelpCircle className="w-4 h-4 text-[#F59E0B]" />
                 </h3>
               </div>
               <Card className="border-2 border-amber-200 bg-[#FFFBEB] rounded-[2.5rem] shadow-md overflow-hidden">
-                <CardContent className="p-7 space-y-4">
-                  <div className="text-[#92400E] font-black text-lg leading-snug">
-                    {isGenerating || isGlobalLoading ? (
-                      "질문을 생각 중..."
-                    ) : (
-                      `Q1. ${globalMeditation?.q1 || "말씀을 통해 느낀 점을 적어보세요."}`
-                    )}
+                <CardContent className="p-7 space-y-6">
+                  {/* Q1 질문 및 입력 */}
+                  <div className="space-y-3">
+                    <div className="text-[#92400E] font-black text-lg leading-snug">
+                      {isGenerating || isGlobalLoading ? (
+                        "질문을 생각 중..."
+                      ) : (
+                        globalMeditation?.q1 || "말씀을 통해 느낀 점을 적어보세요."
+                      )}
+                    </div>
+                    <Textarea 
+                      placeholder="여기에 솔직한 마음을 적어주세요... (10자 이상)"
+                      value={reflection}
+                      onChange={(e) => setReflection(e.target.value)}
+                      className="bg-white border-2 border-amber-100 rounded-2xl min-h-[120px] p-4 text-sm focus-visible:ring-yellow-400 focus-visible:border-yellow-400 placeholder:text-gray-300 resize-none shadow-inner"
+                    />
                   </div>
-                  <Textarea 
-                    placeholder="여기에 솔직한 마음을 적어주세요... (10자 이상)"
-                    value={reflection}
-                    onChange={(e) => setReflection(e.target.value)}
-                    className="bg-white border-2 border-amber-100 rounded-2xl min-h-[120px] p-4 text-sm focus-visible:ring-yellow-400 focus-visible:border-yellow-400 placeholder:text-gray-300 resize-none shadow-inner"
-                  />
-                </CardContent>
-              </Card>
-            </div>
 
-            {/* Q2 섹션 */}
-            <div className="space-y-3">
-              <div className="flex items-center gap-2 px-1">
-                <div className="w-1.5 h-6 bg-[#F59E0B] rounded-full" />
-                <h3 className="font-black text-lg text-gray-800 flex items-center gap-2 italic">
-                  Q2. 결단 및 다짐
-                </h3>
-              </div>
-              <Card className="border-2 border-amber-200 bg-[#FFFBEB] rounded-[2.5rem] shadow-md overflow-hidden">
-                <CardContent className="p-7 space-y-4">
-                  <div className="text-[#92400E] font-black text-lg leading-snug">
-                    {isGenerating || isGlobalLoading ? (
-                      "다짐을 생각 중..."
-                    ) : (
-                      `Q2. ${globalMeditation?.q2 || "오늘 하루 무엇을 실천하고 싶나요?"}`
-                    )}
+                  <Separator className="bg-amber-100" />
+
+                  {/* Q2 질문 및 입력 */}
+                  <div className="space-y-3">
+                    <div className="text-[#92400E] font-black text-lg leading-snug">
+                      {isGenerating || isGlobalLoading ? (
+                        "다짐을 생각 중..."
+                      ) : (
+                        globalMeditation?.q2 || "오늘 하루 무엇을 실천하고 싶나요?"
+                      )}
+                    </div>
+                    <Textarea 
+                      placeholder="오늘 하루 꼭 지킬 한 가지를 적어봐요! (10자 이상)"
+                      value={resolution}
+                      onChange={(e) => setResolution(e.target.value)}
+                      className="bg-white border-2 border-amber-100 rounded-2xl min-h-[120px] p-4 text-sm focus-visible:ring-yellow-400 focus-visible:border-yellow-400 placeholder:text-gray-300 resize-none shadow-inner"
+                    />
                   </div>
-                  <Textarea 
-                    placeholder="오늘 하루 꼭 지킬 한 가지를 적어봐요! (10자 이상)"
-                    value={resolution}
-                    onChange={(e) => setResolution(e.target.value)}
-                    className="bg-white border-2 border-amber-100 rounded-2xl min-h-[120px] p-4 text-sm focus-visible:ring-yellow-400 focus-visible:border-yellow-400 placeholder:text-gray-300 resize-none shadow-inner"
-                  />
                 </CardContent>
               </Card>
             </div>
