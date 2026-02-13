@@ -21,7 +21,8 @@ import {
   Home, 
   Compass, 
   BarChart2,
-  Sparkles
+  Sparkles,
+  ShoppingBag
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -78,7 +79,7 @@ export function WorkspaceSidebar() {
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild tooltip="My Articles">
+                <SidebarMenuButton asChild isActive={pathname === "/dashboard/posts"} tooltip="My Articles">
                   <Link href="/dashboard/posts">
                     <FileText />
                     <span>My Articles</span>
@@ -94,10 +95,18 @@ export function WorkspaceSidebar() {
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild tooltip="AI Studio">
+                <SidebarMenuButton asChild isActive={pathname === "/dashboard/ai"} tooltip="AI Studio">
                   <Link href="/dashboard/ai">
                     <Sparkles className="text-accent" />
                     <span>AI Studio</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild isActive={pathname === "/dashboard/quiz"} tooltip="Quiz & Shop">
+                  <Link href="/dashboard/quiz">
+                    <ShoppingBag className="text-blue-500" />
+                    <span>Quiz & Shop</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
