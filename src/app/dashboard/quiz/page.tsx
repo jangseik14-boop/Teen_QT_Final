@@ -1,29 +1,30 @@
 "use client";
 
 import React, { useState } from 'react';
-import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Sparkles, BookOpen, ShoppingBag, CheckCircle2, ChevronRight } from 'lucide-react';
+import { Sparkles, BookOpen, ShoppingBag, CheckCircle2, ChevronRight, Trophy } from 'lucide-react';
 import { toast } from "@/hooks/use-toast";
+import { Badge } from "@/components/ui/badge";
 
-// 데이터 변수들을 컴포넌트 외부(전역 스코프)로 이동
+// 데이터 변수들을 컴포넌트 외부(전역 스코프)로 정의
 const qtDatabase = [
   { 
     id: "qt-1", 
     title: "새벽의 침묵", 
-    description: "오늘 하루를 차분한 명상으로 시작해보세요.",
+    description: "오늘 하루를 차분한 명상으로 시작해보세요. 조용한 시간 속에서 내면의 목소리에 귀를 기울입니다.",
     category: "Morning"
   },
   { 
     id: "qt-2", 
     title: "한낮의 쉼표", 
-    description: "복잡한 생각들을 내려놓고 현재에 집중합니다.",
+    description: "복잡한 생각들을 잠시 내려놓고 현재의 순간에 집중합니다. 호흡을 가다듬고 여유를 찾아보세요.",
     category: "Afternoon"
   },
   { 
     id: "qt-3", 
     title: "별 헤는 밤", 
-    description: "감사했던 일들을 떠올리며 하루를 정리합니다.",
+    description: "오늘 하루 감사했던 일들을 떠올리며 평온하게 마무리합니다. 내일의 희망을 꿈꾸는 시간입니다.",
     category: "Evening"
   }
 ];
@@ -40,6 +41,12 @@ const quizDatabase = [
     question: "리액트에서 상태 관리를 위해 가장 기본적으로 사용하는 훅은?",
     options: ["useEffect", "useState", "useMemo", "useRef"],
     answer: "useState"
+  },
+  {
+    id: 3,
+    question: "Next.js에서 서버 사이드 렌더링을 지원하는 가장 큰 이유는?",
+    options: ["보안", "SEO 및 초기 로딩 속도", "디자인", "파일 크기"],
+    answer: "SEO 및 초기 로딩 속도"
   }
 ];
 
@@ -47,26 +54,29 @@ const shopItems = [
   {
     id: "item-1",
     name: "프로 에디터 팩",
-    price: "₩12,000",
-    feature: "무제한 AI 글쓰기 제안"
+    price: "12,000 P",
+    feature: "무제한 AI 글쓰기 제안 및 고급 교정 기능",
+    badge: "Hot"
   },
   {
     id: "item-2",
     name: "프리미엄 템플릿",
-    price: "₩8,000",
-    feature: "50개 이상의 독점 레이아웃"
+    price: "8,000 P",
+    feature: "50개 이상의 독점 레이아웃과 디자인 에셋",
+    badge: "New"
   },
   {
     id: "item-3",
     name: "다이소 상품권",
-    price: "₩5,000",
-    feature: "다양한 사무용품 구매 가능"
+    price: "5,000 P",
+    feature: "전국 다이소 매장에서 사용 가능한 모바일 쿠폰"
   },
   {
     id: "item-4",
-    name: "치킨",
-    price: "2000D",
-    feature: "맛있는 황금올리브 치킨"
+    name: "황금올리브 치킨",
+    price: "2,000 D",
+    feature: "바삭하고 고소한 황금빛 유혹, 오늘 저녁은 치킨!",
+    badge: "Best"
   }
 ];
 
@@ -76,106 +86,167 @@ export default function QuizApp() {
 
   const handleAnswer = (selected: string) => {
     if (selected === quizDatabase[currentQuiz].answer) {
-      setScore(s => s + 1);
-      toast({ title: "정답입니다! 🎉", description: "점수가 1점 추가되었습니다." });
+      setScore(s => s + 10);
+      toast({ 
+        title: "정답입니다! 🎉", 
+        description: "포인트가 10점 추가되었습니다.",
+      });
     } else {
-      toast({ title: "아쉽네요! 💡", description: "다음에 다시 도전해보세요.", variant: "destructive" });
+      toast({ 
+        title: "아쉽네요! 💡", 
+        description: `정답은 "${quizDatabase[currentQuiz].answer}"입니다.`, 
+        variant: "destructive" 
+      });
     }
-    setCurrentQuiz((prev) => (prev + 1) % quizDatabase.length);
+    
+    // 다음 퀴즈로 넘어가기 (마지막이면 처음으로)
+    setTimeout(() => {
+      setCurrentQuiz((prev) => (prev + 1) % quizDatabase.length);
+    }, 500);
   };
 
   return (
-    <div className="space-y-10">
-      <div className="space-y-2">
-        <h1 className="text-3xl font-bold font-headline flex items-center gap-2">
-          Quiz & Shop <Sparkles className="text-accent" />
-        </h1>
-        <p className="text-muted-foreground">전역 스코프에 데이터가 정의된 퀴즈 및 상점 페이지입니다.</p>
+    <div className="max-w-6xl mx-auto space-y-10 pb-20">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div className="space-y-2">
+          <Badge variant="outline" className="text-primary border-primary/20 bg-primary/5">Interactive Studio</Badge>
+          <h1 className="text-4xl font-bold font-headline flex items-center gap-3">
+            Quiz & Shop <Sparkles className="text-accent animate-pulse" />
+          </h1>
+          <p className="text-muted-foreground text-lg">퀴즈를 풀고 얻은 포인트로 상점에서 특별한 아이템을 구매하세요.</p>
+        </div>
+        <div className="flex items-center gap-4 bg-card p-4 rounded-2xl border shadow-sm">
+           <div className="flex flex-col">
+              <span className="text-xs text-muted-foreground font-bold uppercase">My Points</span>
+              <span className="text-2xl font-bold text-primary">{score} P</span>
+           </div>
+           <div className="h-10 w-[1px] bg-border mx-2" />
+           <Trophy className="w-8 h-8 text-yellow-500" />
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Left Section: Quiz & QT */}
         <div className="lg:col-span-2 space-y-8">
-          <Card className="border-none shadow-sm bg-accent/5 overflow-hidden">
-            <CardHeader className="border-b bg-background/50">
+          {/* Quiz Card */}
+          <Card className="border-none shadow-xl bg-gradient-to-br from-card to-accent/5 overflow-hidden">
+            <CardHeader className="border-b bg-background/50 backdrop-blur-sm">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Sparkles className="text-accent w-5 h-5" />
-                  <CardTitle className="text-lg">Daily Quiz</CardTitle>
+                  <div className="bg-primary/10 p-2 rounded-lg text-primary">
+                    <Sparkles className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-lg">Daily Quiz</CardTitle>
+                    <CardDescription>질문을 읽고 정답을 골라주세요.</CardDescription>
+                  </div>
                 </div>
-                <div className="bg-primary/10 text-primary px-3 py-1 rounded-full text-xs font-bold border border-primary/20">
-                  Score: {score}
-                </div>
+                <Badge variant="secondary" className="px-3 py-1">Question {currentQuiz + 1}/{quizDatabase.length}</Badge>
               </div>
             </CardHeader>
-            <CardContent className="pt-8 pb-8 space-y-6">
-              <h3 className="text-xl font-bold text-center mb-8">
+            <CardContent className="pt-10 pb-10 space-y-8">
+              <h3 className="text-2xl font-bold text-center leading-tight max-w-lg mx-auto">
                 {quizDatabase[currentQuiz].question}
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {quizDatabase[currentQuiz].options.map(option => (
+                {quizDatabase[currentQuiz].options.map((option, idx) => (
                   <Button 
-                    key={option} 
+                    key={idx} 
                     variant="outline" 
-                    className="h-16 text-md hover:bg-primary hover:text-white transition-all rounded-xl"
+                    className="h-20 text-lg hover:border-primary hover:bg-primary/5 transition-all rounded-2xl border-2 flex flex-col gap-1 items-center justify-center group"
                     onClick={() => handleAnswer(option)}
                   >
-                    {option}
+                    <span className="text-xs text-muted-foreground group-hover:text-primary/70">{idx + 1}. Option</span>
+                    <span className="font-semibold">{option}</span>
                   </Button>
                 ))}
               </div>
             </CardContent>
+            <CardFooter className="bg-muted/30 py-4 flex justify-center border-t">
+              <p className="text-sm text-muted-foreground italic">매일 새로운 퀴즈가 업데이트 됩니다.</p>
+            </CardFooter>
           </Card>
 
-          <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <BookOpen className="text-primary w-5 h-5" />
-              <h2 className="text-xl font-bold font-headline">Latest QT</h2>
+          {/* QT Section */}
+          <div className="space-y-6">
+            <div className="flex items-center gap-3">
+              <div className="bg-primary p-2 rounded-lg text-white">
+                <BookOpen className="w-5 h-5" />
+              </div>
+              <h2 className="text-2xl font-bold font-headline">Latest QT</h2>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {qtDatabase.map(qt => (
-                <Card key={qt.id} className="border-none shadow-sm hover:shadow-md transition-all">
-                  <CardHeader className="p-4">
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-primary mb-1 block">{qt.category}</span>
-                    <CardTitle className="text-md">{qt.title}</CardTitle>
+                <Card key={qt.id} className="border-none shadow-md hover:shadow-lg transition-all group">
+                  <CardHeader className="p-5">
+                    <Badge className="mb-2 bg-primary/10 text-primary border-none hover:bg-primary/20">{qt.category}</Badge>
+                    <CardTitle className="text-xl group-hover:text-primary transition-colors">{qt.title}</CardTitle>
                   </CardHeader>
-                  <CardContent className="p-4 pt-0">
-                    <p className="text-xs text-muted-foreground leading-relaxed">{qt.description}</p>
+                  <CardContent className="p-5 pt-0">
+                    <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3">{qt.description}</p>
                   </CardContent>
+                  <CardFooter className="p-5 pt-0">
+                    <Button variant="link" className="p-0 h-auto text-xs flex items-center gap-1 group-hover:gap-2 transition-all">
+                      Read More <ChevronRight className="w-3 h-3" />
+                    </Button>
+                  </CardFooter>
                 </Card>
               ))}
             </div>
           </div>
         </div>
 
-        <div className="space-y-6">
-          <div className="flex items-center gap-2">
-            <ShoppingBag className="text-blue-500 w-5 h-5" />
-            <h2 className="text-xl font-bold font-headline">Store</h2>
+        {/* Right Section: Store */}
+        <div className="space-y-8">
+          <div className="flex items-center gap-3">
+             <div className="bg-blue-500 p-2 rounded-lg text-white">
+                <ShoppingBag className="w-5 h-5" />
+             </div>
+             <h2 className="text-2xl font-bold font-headline">Store</h2>
           </div>
+          
           <div className="space-y-4">
             {shopItems.map(item => (
-              <Card key={item.id} className="group overflow-hidden border-none shadow-sm hover:shadow-lg transition-all">
-                <CardHeader className="p-4 pb-2">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <CardTitle className="text-md">{item.name}</CardTitle>
-                      <CardDescription className="text-[10px]">{item.feature}</CardDescription>
+              <Card key={item.id} className="group overflow-hidden border-none shadow-sm hover:shadow-xl transition-all relative">
+                {item.badge && (
+                  <div className="absolute top-0 right-0">
+                    <div className="bg-accent text-accent-foreground text-[10px] font-bold px-3 py-1 rounded-bl-lg uppercase tracking-wider">
+                      {item.badge}
                     </div>
-                    <div className="font-bold text-primary">{item.price}</div>
+                  </div>
+                )}
+                <CardHeader className="p-5 pb-3">
+                  <div className="flex justify-between items-start">
+                    <div className="space-y-1">
+                      <CardTitle className="text-lg">{item.name}</CardTitle>
+                      <CardDescription className="text-xs leading-snug">{item.feature}</CardDescription>
+                    </div>
                   </div>
                 </CardHeader>
-                <CardContent className="p-4 pt-2">
-                  <Button className="w-full rounded-lg gap-2 group-hover:bg-accent group-hover:text-accent-foreground h-9 text-xs">
-                    구매하기 <ChevronRight className="w-3 h-3" />
+                <CardContent className="p-5 pt-0 flex items-center justify-between">
+                  <div className="font-bold text-xl text-primary">{item.price}</div>
+                  <Button className="rounded-xl px-6 bg-primary hover:bg-primary/90 shadow-md group-hover:translate-y-[-2px] transition-transform">
+                    구매하기
                   </Button>
                 </CardContent>
               </Card>
             ))}
           </div>
 
-          <div className="p-6 rounded-2xl bg-gradient-to-br from-primary/5 to-accent/10 border border-primary/10">
-            <h3 className="font-bold text-sm mb-2">포인트 안내</h3>
-            <p className="text-xs text-muted-foreground">퀴즈를 맞힐 때마다 포인트가 쌓이며, 상점에서 아이템 구매 시 사용할 수 있습니다.</p>
+          {/* Info Card */}
+          <div className="p-8 rounded-3xl bg-gradient-to-br from-primary/10 to-accent/10 border border-primary/20 shadow-inner relative overflow-hidden group">
+            <div className="absolute -right-4 -bottom-4 opacity-5 group-hover:scale-110 transition-transform duration-700">
+               <Trophy className="w-32 h-32" />
+            </div>
+            <h3 className="font-bold text-lg mb-3 flex items-center gap-2">
+               <CheckCircle2 className="w-5 h-5 text-primary" />
+               포인트 안내
+            </h3>
+            <ul className="space-y-2 text-sm text-muted-foreground relative z-10">
+              <li>• 퀴즈 정답 시 10 포인트가 지급됩니다.</li>
+              <li>• 하루 최대 3번까지 퀴즈에 참여 가능합니다.</li>
+              <li>• 획득한 포인트는 유효기간이 없습니다.</li>
+            </ul>
           </div>
         </div>
       </div>
