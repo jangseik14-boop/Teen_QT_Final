@@ -217,60 +217,80 @@ export default function DashboardPage() {
             </div>
           </div>
         ) : (
-          <div className="space-y-6">
-            <Card className="border-2 border-amber-300 bg-[#FFFBEB] rounded-[2.5rem] p-7 space-y-8 shadow-md">
-              {/* Q1 섹션 */}
-              <div className="space-y-4">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <span className="bg-yellow-400 text-yellow-900 text-[10px] font-black px-2 py-0.5 rounded-md uppercase tracking-tighter">Q1. 묵상하기</span>
-                  </div>
-                  <h3 className="font-black text-lg text-[#92400E] leading-snug">
-                    {isGenerating || isGlobalLoading ? "질문을 생각 중..." : globalMeditation?.q1 || "말씀을 통해 느낀 점을 적어보세요."}
-                  </h3>
-                </div>
-                <Textarea 
-                  placeholder="여기에 솔직한 마음을 적어주세요... (10자 이상)"
-                  value={reflection}
-                  onChange={(e) => setReflection(e.target.value)}
-                  className="bg-white border-2 border-amber-200 rounded-2xl min-h-[120px] p-4 text-sm focus-visible:ring-yellow-400 focus-visible:border-yellow-400 placeholder:text-gray-300 resize-none shadow-inner"
-                />
+          <div className="space-y-8">
+            {/* Q1 섹션 */}
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 px-1">
+                <div className="w-1.5 h-6 bg-[#F59E0B] rounded-full" />
+                <h3 className="font-black text-lg text-gray-800 flex items-center gap-2 italic">
+                  Q1. 묵상하기
+                </h3>
               </div>
-
-              <div className="h-px bg-amber-200/50" />
-
-              {/* Q2 섹션 */}
-              <div className="space-y-4">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <span className="bg-yellow-400 text-yellow-900 text-[10px] font-black px-2 py-0.5 rounded-md uppercase tracking-tighter">Q2. 결단 및 다짐</span>
+              <Card className="border-2 border-amber-200 bg-[#FFFBEB] rounded-[2.5rem] shadow-md overflow-hidden">
+                <CardContent className="p-7 space-y-4">
+                  <div className="text-[#92400E] font-black text-lg leading-snug">
+                    {isGenerating || isGlobalLoading ? (
+                      "질문을 생각 중..."
+                    ) : (
+                      `Q1. ${globalMeditation?.q1 || "말씀을 통해 느낀 점을 적어보세요."}`
+                    )}
                   </div>
-                  <h3 className="font-black text-lg text-[#92400E] leading-snug">
-                    {isGenerating || isGlobalLoading ? "다짐을 생각 중..." : globalMeditation?.q2 || "오늘 하루 무엇을 실천하고 싶나요?"}
-                  </h3>
-                </div>
-                <Textarea 
-                  placeholder="오늘 하루 꼭 지킬 한 가지를 적어봐요! (10자 이상)"
-                  value={resolution}
-                  onChange={(e) => setResolution(e.target.value)}
-                  className="bg-white border-2 border-amber-200 rounded-2xl min-h-[120px] p-4 text-sm focus-visible:ring-yellow-400 focus-visible:border-yellow-400 placeholder:text-gray-300 resize-none shadow-inner"
-                />
+                  <Textarea 
+                    placeholder="여기에 솔직한 마음을 적어주세요... (10자 이상)"
+                    value={reflection}
+                    onChange={(e) => setReflection(e.target.value)}
+                    className="bg-white border-2 border-amber-100 rounded-2xl min-h-[120px] p-4 text-sm focus-visible:ring-yellow-400 focus-visible:border-yellow-400 placeholder:text-gray-300 resize-none shadow-inner"
+                  />
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Q2 섹션 */}
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 px-1">
+                <div className="w-1.5 h-6 bg-[#F59E0B] rounded-full" />
+                <h3 className="font-black text-lg text-gray-800 flex items-center gap-2 italic">
+                  Q2. 결단 및 다짐
+                </h3>
               </div>
-            </Card>
+              <Card className="border-2 border-amber-200 bg-[#FFFBEB] rounded-[2.5rem] shadow-md overflow-hidden">
+                <CardContent className="p-7 space-y-4">
+                  <div className="text-[#92400E] font-black text-lg leading-snug">
+                    {isGenerating || isGlobalLoading ? (
+                      "다짐을 생각 중..."
+                    ) : (
+                      `Q2. ${globalMeditation?.q2 || "오늘 하루 무엇을 실천하고 싶나요?"}`
+                    )}
+                  </div>
+                  <Textarea 
+                    placeholder="오늘 하루 꼭 지킬 한 가지를 적어봐요! (10자 이상)"
+                    value={resolution}
+                    onChange={(e) => setResolution(e.target.value)}
+                    className="bg-white border-2 border-amber-100 rounded-2xl min-h-[120px] p-4 text-sm focus-visible:ring-yellow-400 focus-visible:border-yellow-400 placeholder:text-gray-300 resize-none shadow-inner"
+                  />
+                </CardContent>
+              </Card>
+            </div>
 
             {/* 기도 섹션 */}
-            <Card className="border-2 border-violet-300 bg-[#F5F3FF] rounded-[2.5rem] p-7 space-y-4 shadow-md">
-              <div className="flex items-center gap-2">
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 px-1">
                 <div className="w-1.5 h-6 bg-[#8B5CF6] rounded-full" />
-                <h3 className="font-black text-lg text-[#5B21B6]">🙏 오늘의 기도</h3>
+                <h3 className="font-black text-lg text-gray-800 flex items-center gap-2 italic">
+                  🙏 오늘의 기도
+                </h3>
               </div>
-              <Textarea 
-                placeholder="하나님께 드리는 짧은 기도문을 적어보세요. (10자 이상)"
-                value={prayer}
-                onChange={(e) => setPrayer(e.target.value)}
-                className="bg-white border-2 border-violet-200 rounded-2xl min-h-[120px] p-4 text-sm focus-visible:ring-violet-400 focus-visible:border-violet-400 placeholder:text-gray-300 resize-none shadow-inner"
-              />
-            </Card>
+              <Card className="border-2 border-violet-200 bg-[#F5F3FF] rounded-[2.5rem] shadow-md overflow-hidden">
+                <CardContent className="p-7">
+                  <Textarea 
+                    placeholder="하나님께 드리는 짧은 기도문을 적어보세요. (10자 이상)"
+                    value={prayer}
+                    onChange={(e) => setPrayer(e.target.value)}
+                    className="bg-white border-2 border-violet-100 rounded-2xl min-h-[120px] p-4 text-sm focus-visible:ring-violet-400 focus-visible:border-violet-400 placeholder:text-gray-300 resize-none shadow-inner"
+                  />
+                </CardContent>
+              </Card>
+            </div>
 
             {/* 완료 버튼 */}
             <Button 
