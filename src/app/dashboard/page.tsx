@@ -99,10 +99,11 @@ export default function DashboardPage() {
   const handleComplete = () => {
     if (!user || !userRef || !userMeditationRef) return;
     
-    if (reflection.trim().length < 10 || resolution.trim().length < 10 || prayer.trim().length < 10) {
+    // Q1, Q2는 20자 이상, 기도는 10자 이상 체크
+    if (reflection.trim().length < 20 || resolution.trim().length < 20 || prayer.trim().length < 10) {
       toast({ 
         title: "조금 더 정성을 들여볼까요?", 
-        description: "각 항목을 최소 10자 이상 채워주세요!", 
+        description: "묵상(Q1)과 다짐(Q2)은 20자 이상, 기도는 10자 이상 채워주세요!", 
         variant: "destructive" 
       });
       return;
@@ -133,14 +134,14 @@ export default function DashboardPage() {
     });
   };
 
-  const CharCount = ({ count }: { count: number }) => (
+  const CharCount = ({ count, target = 10 }: { count: number; target?: number }) => (
     <div className={cn(
-      "text-[10px] font-bold px-2 py-0.5 rounded-full border shadow-sm",
-      count >= 10 
+      "text-[10px] font-bold px-2 py-0.5 rounded-full border shadow-sm transition-colors",
+      count >= target 
         ? "bg-green-500 text-white border-green-600" 
         : "bg-white text-gray-400 border-gray-200"
     )}>
-      {count} / 10자
+      {count} / {target}자
     </div>
   );
 
@@ -243,7 +244,7 @@ export default function DashboardPage() {
                     </p>
                     <div className="relative">
                       <div className="absolute top-3 right-3 z-10">
-                        <CharCount count={reflection.length} />
+                        <CharCount count={reflection.length} target={20} />
                       </div>
                       <Textarea 
                         placeholder="여기에 솔직한 마음을 적어주세요..."
@@ -263,7 +264,7 @@ export default function DashboardPage() {
                     </p>
                     <div className="relative">
                       <div className="absolute top-3 right-3 z-10">
-                        <CharCount count={resolution.length} />
+                        <CharCount count={resolution.length} target={20} />
                       </div>
                       <Textarea 
                         placeholder="오늘 하루 꼭 지킬 한 가지를 적어봐요!"
@@ -289,8 +290,8 @@ export default function DashboardPage() {
               </div>
               <Card className="border-2 border-violet-200 bg-[#F5F3FF] rounded-[2.5rem] shadow-md overflow-hidden">
                 <CardContent className="p-7 relative">
-                  <div className="absolute top-10 right-10 z-10">
-                    <CharCount count={prayer.length} />
+                  <div className="absolute top-3 right-3 z-10">
+                    <CharCount count={prayer.length} target={10} />
                   </div>
                   <Textarea 
                     placeholder="하나님께 드리는 짧은 기도문을 적어보세요..."
