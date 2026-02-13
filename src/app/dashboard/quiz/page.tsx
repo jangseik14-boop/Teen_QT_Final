@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Sparkles, BookOpen, ShoppingBag, CheckCircle2, ChevronRight } from 'lucide-react';
 import { toast } from "@/hooks/use-toast";
 
+// 데이터 변수들을 컴포넌트 외부(전역 스코프)로 이동
 const qtDatabase = [
   { 
     id: "qt-1", 
@@ -89,7 +90,7 @@ export default function QuizApp() {
         <h1 className="text-3xl font-bold font-headline flex items-center gap-2">
           Quiz & Shop <Sparkles className="text-accent" />
         </h1>
-        <p className="text-muted-foreground">데이터 전역 관리 패턴이 적용된 예시 페이지입니다.</p>
+        <p className="text-muted-foreground">전역 스코프에 데이터가 정의된 퀴즈 및 상점 페이지입니다.</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
