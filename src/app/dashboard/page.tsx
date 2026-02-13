@@ -134,14 +134,14 @@ export default function DashboardPage() {
   };
 
   const CharCount = ({ count }: { count: number }) => (
-    <span className={cn(
-      "text-[11px] font-bold px-2 py-0.5 rounded-full border",
+    <div className={cn(
+      "text-[10px] font-bold px-2 py-0.5 rounded-full border shadow-sm",
       count >= 10 
-        ? "bg-green-100 text-green-600 border-green-200" 
-        : "bg-gray-100 text-gray-400 border-gray-200"
+        ? "bg-green-500 text-white border-green-600" 
+        : "bg-white text-gray-400 border-gray-200"
     )}>
-      {count} / 10자 이상
-    </span>
+      {count} / 10자
+    </div>
   );
 
   const todayStr = new Intl.DateTimeFormat('ko-KR', { 
@@ -164,6 +164,7 @@ export default function DashboardPage() {
       </header>
 
       <div className="px-5 space-y-6 pt-6 pb-10">
+        {/* 말씀 카드 */}
         <Card className="border-2 border-blue-300 bg-white rounded-[2.5rem] overflow-hidden shadow-md">
           <CardContent className="p-8 space-y-3">
             <div className="flex items-center gap-2 text-[#6366F1] mb-1">
@@ -178,12 +179,14 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
+        {/* 말씀 텍스트 카드 */}
         <Card className="border-2 border-sky-300 bg-[#F0F9FF] rounded-[2.5rem] shadow-md">
           <CardContent className="p-8 text-center italic text-[#0369A1] font-bold text-lg leading-relaxed">
             "{currentVerse.text}"
           </CardContent>
         </Card>
 
+        {/* 말씀 해설 섹션 */}
         <div className="space-y-3">
           <div className="flex items-center gap-2 px-1">
             <div className="w-1.5 h-6 bg-[#EC4899] rounded-full" />
@@ -221,6 +224,7 @@ export default function DashboardPage() {
           </div>
         ) : (
           <div className="space-y-8">
+            {/* 말씀 묵상 섹션 (Q1, Q2) */}
             <div className="space-y-3">
               <div className="flex items-center justify-between px-1">
                 <div className="flex items-center gap-2">
@@ -232,49 +236,48 @@ export default function DashboardPage() {
               </div>
               <Card className="border-2 border-amber-200 bg-[#FFFBEB] rounded-[2.5rem] shadow-md overflow-hidden">
                 <CardContent className="p-7 space-y-6">
+                  {/* Q1 섹션 */}
                   <div className="space-y-3">
-                    <div className="flex justify-between items-start gap-2">
-                      <div className="text-[#92400E] font-black text-base leading-snug flex-1">
-                        {isGenerating || isGlobalLoading ? (
-                          "질문을 생각 중..."
-                        ) : (
-                          `Q1. ${globalMeditation?.q1 || "말씀을 통해 느낀 점을 적어보세요."}`
-                        )}
+                    <p className="text-[#92400E] font-black text-[15px] leading-snug px-1">
+                      {isGenerating || isGlobalLoading ? "질문을 생각 중..." : `Q1. ${globalMeditation?.q1 || "말씀을 통해 느낀 점을 적어보세요."}`}
+                    </p>
+                    <div className="relative">
+                      <div className="absolute top-3 right-3 z-10">
+                        <CharCount count={reflection.length} />
                       </div>
-                      <CharCount count={reflection.length} />
+                      <Textarea 
+                        placeholder="여기에 솔직한 마음을 적어주세요..."
+                        value={reflection}
+                        onChange={(e) => setReflection(e.target.value)}
+                        className="bg-white border-2 border-amber-100 rounded-2xl min-h-[140px] p-4 pt-10 text-sm focus-visible:ring-yellow-400 focus-visible:border-yellow-400 placeholder:text-gray-300 resize-none shadow-inner"
+                      />
                     </div>
-                    <Textarea 
-                      placeholder="여기에 솔직한 마음을 적어주세요..."
-                      value={reflection}
-                      onChange={(e) => setReflection(e.target.value)}
-                      className="bg-white border-2 border-amber-100 rounded-2xl min-h-[120px] p-4 text-sm focus-visible:ring-yellow-400 focus-visible:border-yellow-400 placeholder:text-gray-300 resize-none shadow-inner"
-                    />
                   </div>
 
                   <Separator className="bg-amber-100" />
 
+                  {/* Q2 섹션 */}
                   <div className="space-y-3">
-                    <div className="flex justify-between items-start gap-2">
-                      <div className="text-[#92400E] font-black text-base leading-snug flex-1">
-                        {isGenerating || isGlobalLoading ? (
-                          "다짐을 생각 중..."
-                        ) : (
-                          `Q2. ${globalMeditation?.q2 || "오늘 하루 무엇을 실천하고 싶나요?"}`
-                        )}
+                    <p className="text-[#92400E] font-black text-[15px] leading-snug px-1">
+                      {isGenerating || isGlobalLoading ? "다짐을 생각 중..." : `Q2. ${globalMeditation?.q2 || "오늘 하루 무엇을 실천하고 싶나요?"}`}
+                    </p>
+                    <div className="relative">
+                      <div className="absolute top-3 right-3 z-10">
+                        <CharCount count={resolution.length} />
                       </div>
-                      <CharCount count={resolution.length} />
+                      <Textarea 
+                        placeholder="오늘 하루 꼭 지킬 한 가지를 적어봐요!"
+                        value={resolution}
+                        onChange={(e) => setResolution(e.target.value)}
+                        className="bg-white border-2 border-amber-100 rounded-2xl min-h-[140px] p-4 pt-10 text-sm focus-visible:ring-yellow-400 focus-visible:border-yellow-400 placeholder:text-gray-300 resize-none shadow-inner"
+                      />
                     </div>
-                    <Textarea 
-                      placeholder="오늘 하루 꼭 지킬 한 가지를 적어봐요!"
-                      value={resolution}
-                      onChange={(e) => setResolution(e.target.value)}
-                      className="bg-white border-2 border-amber-100 rounded-2xl min-h-[120px] p-4 text-sm focus-visible:ring-yellow-400 focus-visible:border-yellow-400 placeholder:text-gray-300 resize-none shadow-inner"
-                    />
                   </div>
                 </CardContent>
               </Card>
             </div>
 
+            {/* 기도 섹션 */}
             <div className="space-y-3">
               <div className="flex items-center justify-between px-1">
                 <div className="flex items-center gap-2">
@@ -283,15 +286,17 @@ export default function DashboardPage() {
                     🙏 오늘의 기도
                   </h3>
                 </div>
-                <CharCount count={prayer.length} />
               </div>
               <Card className="border-2 border-violet-200 bg-[#F5F3FF] rounded-[2.5rem] shadow-md overflow-hidden">
-                <CardContent className="p-7">
+                <CardContent className="p-7 relative">
+                  <div className="absolute top-10 right-10 z-10">
+                    <CharCount count={prayer.length} />
+                  </div>
                   <Textarea 
                     placeholder="하나님께 드리는 짧은 기도문을 적어보세요..."
                     value={prayer}
                     onChange={(e) => setPrayer(e.target.value)}
-                    className="bg-white border-2 border-violet-100 rounded-2xl min-h-[120px] p-4 text-sm focus-visible:ring-violet-400 focus-visible:border-violet-400 placeholder:text-gray-300 resize-none shadow-inner"
+                    className="bg-white border-2 border-violet-100 rounded-2xl min-h-[140px] p-4 pt-10 text-sm focus-visible:ring-violet-400 focus-visible:border-violet-400 placeholder:text-gray-300 resize-none shadow-inner"
                   />
                 </CardContent>
               </Card>
