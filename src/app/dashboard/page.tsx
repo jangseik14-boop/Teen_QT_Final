@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -21,6 +22,7 @@ import { useUser, useFirestore, useDoc, updateDocumentNonBlocking, setDocumentNo
 import { doc } from "firebase/firestore";
 import { generateMeditation } from "@/ai/flows/generate-meditation";
 import { toast } from "@/hooks/use-toast";
+import { getVerseForToday } from "@/lib/bible-verses";
 
 // 오늘 날짜 ID 생성 (YYYY-MM-DD)
 const getTodayId = () => new Date().toISOString().split('T')[0];
@@ -35,6 +37,7 @@ export default function DashboardPage() {
   const [isGenerating, setIsGenerating] = useState(false);
 
   const todayId = getTodayId();
+  const currentVerse = getVerseForToday();
 
   // 1. 사용자 정보 및 포인트 가져오기
   const userRef = useMemoFirebase(() => user ? doc(firestore, "users", user.uid) : null, [user, firestore]);
@@ -47,12 +50,6 @@ export default function DashboardPage() {
   // 3. 전역 공유 묵상 데이터 (AI 해설 및 질문) 가져오기
   const globalMeditationRef = useMemoFirebase(() => doc(firestore, "dailyMeditations", todayId), [firestore, todayId]);
   const { data: globalMeditation, isLoading: isGlobalLoading } = useDoc(globalMeditationRef);
-
-  // 오늘의 고정 구절 (관리자가 나중에 바꿀 수 있음)
-  const currentVerse = {
-    ref: "애가 3:22-23",
-    text: "여호와의 인자와 긍휼이 무궁하시므로 우리가 진멸되지 아니함이니이다 이것들이 아침마다 새로우니 주의 성실하심이 크시도소이다"
-  };
 
   // 4. AI 데이터가 없으면 최초 접속자가 생성하여 저장
   useEffect(() => {
@@ -82,7 +79,7 @@ export default function DashboardPage() {
       }
     };
 
-    if (user) {
+    if (user && !isGlobalLoading) {
       fetchOrGenerateAI();
     }
   }, [globalMeditation, isGlobalLoading, user, todayId, currentVerse, globalMeditationRef]);
@@ -152,7 +149,7 @@ export default function DashboardPage() {
               <Calendar className="w-4 h-4" />
               <p className="font-bold text-xs uppercase tracking-wider">{todayStr}</p>
             </div>
-            <h2 className="text-2xl font-black text-[#1E1B4B] tracking-tight">아침마다 새로운 긍휼</h2>
+            <h2 className="text-2xl font-black text-[#1E1B4B] tracking-tight">아침마다 새로운 은혜</h2>
             <div className="flex items-center gap-2 text-[#6366F1]">
               <BookMarked className="w-4 h-4" />
               <span className="font-bold text-sm">{currentVerse.ref}</span>
@@ -180,10 +177,10 @@ export default function DashboardPage() {
               {isGenerating || isGlobalLoading ? (
                 <div className="flex items-center justify-center py-4 gap-3 text-muted-foreground animate-pulse">
                   <Loader2 className="w-5 h-5 animate-spin" /> 
-                  <span className="font-bold">오늘의 해설을 불러오는 중...</span>
+                  <span className="font-bold">해설을 불러오는 중...</span>
                 </div>
               ) : (
-                globalMeditation?.commentary || "하나님의 사랑과 용서는 매일 아침 뜨는 해처럼 항상 새롭고 끝이 없답니다."
+                globalMeditation?.commentary || "오늘의 말씀을 통해 하나님의 사랑을 느껴보세요."
               )}
             </CardContent>
           </Card>
@@ -198,7 +195,7 @@ export default function DashboardPage() {
             <div className="space-y-2">
               <p className="text-xl font-black text-green-700">오늘의 묵상 완료! 🎉</p>
               <p className="text-sm font-medium text-green-600 leading-relaxed">
-                훌륭해요! 50달란트가 적립되었습니다.<br/>내일 아침 새로운 말씀으로 또 만나요.
+                참 잘했어요! 50달란트가 적립되었습니다.<br/>내일 아침 새로운 말씀으로 또 만나요.
               </p>
             </div>
           </div>
@@ -212,7 +209,7 @@ export default function DashboardPage() {
                     <h3 className="font-black text-lg text-[#92400E]">묵상하기</h3>
                   </div>
                   <p className="text-[#B45309] text-[15px] font-bold leading-relaxed pl-1">
-                    {isGenerating || isGlobalLoading ? "질문을 생각 중..." : globalMeditation?.q1 || "하나님의 성실하심을 경험했던 순간이 있나요?"}
+                    {isGenerating || isGlobalLoading ? "질문을 생각 중..." : globalMeditation?.q1 || "말씀을 통해 느낀 점을 적어보세요."}
                   </p>
                 </div>
                 <Textarea 
@@ -232,7 +229,7 @@ export default function DashboardPage() {
                     <h3 className="font-black text-lg text-[#92400E]">결단 및 다짐</h3>
                   </div>
                   <p className="text-[#B45309] text-[15px] font-bold leading-relaxed pl-1">
-                    {isGenerating || isGlobalLoading ? "다짐을 생각 중..." : globalMeditation?.q2 || "오늘 하루 무엇을 실천해보고 싶나요?"}
+                    {isGenerating || isGlobalLoading ? "다짐을 생각 중..." : globalMeditation?.q2 || "오늘 하루 무엇을 실천하고 싶나요?"}
                   </p>
                 </div>
                 <Textarea 
