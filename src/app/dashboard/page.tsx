@@ -139,8 +139,8 @@ export default function DashboardPage() {
   }).format(new Date());
 
   return (
-    <div className="max-w-md mx-auto bg-white min-h-screen pb-24 shadow-xl rounded-[3rem] overflow-hidden relative border border-gray-100 font-body">
-      <header className="px-6 pt-8 pb-4 flex justify-between items-start bg-white">
+    <div className="max-w-md mx-auto bg-[#F8FBFF] min-h-screen pb-24 shadow-2xl rounded-[3rem] overflow-hidden relative border border-blue-100 font-body">
+      <header className="px-6 pt-8 pb-4 flex justify-between items-start bg-white/80 backdrop-blur-sm sticky top-0 z-40 border-b border-blue-50">
         <div className="space-y-1">
           <h1 className="text-3xl font-black text-[#C026D3] tracking-tight italic">예본TeenQT</h1>
           <p className="text-gray-500 text-sm font-medium">반가워요, {user?.displayName || "친구"}님!</p>
@@ -151,9 +151,9 @@ export default function DashboardPage() {
         </div>
       </header>
 
-      <div className="px-5 space-y-6 overflow-y-auto h-[calc(100vh-180px)] pb-10 scrollbar-hide">
+      <div className="px-5 space-y-6 pt-6 overflow-y-auto scrollbar-hide">
         {/* 오늘의 주제 카드 */}
-        <Card className="border-none bg-[#EEF2FF] rounded-[2rem] overflow-hidden shadow-sm">
+        <Card className="border border-blue-200 bg-[#EEF2FF] rounded-[2rem] overflow-hidden shadow-sm">
           <CardContent className="p-8 space-y-3">
             <div className="flex items-center gap-2 text-[#6366F1] mb-1">
               <Calendar className="w-4 h-4" />
@@ -168,21 +168,21 @@ export default function DashboardPage() {
         </Card>
 
         {/* 말씀 구절 카드 */}
-        <Card className="border-none bg-[#F0F9FF] rounded-[2rem] shadow-sm">
+        <Card className="border border-sky-200 bg-[#F0F9FF] rounded-[2rem] shadow-sm">
           <CardContent className="p-8 text-center italic text-[#0369A1] font-bold text-lg leading-relaxed">
             "{currentVerse.text}"
           </CardContent>
         </Card>
 
         {/* AI 말씀 해설 섹션 */}
-        <div className="space-y-4">
+        <div className="space-y-3">
           <div className="flex items-center gap-2 px-1">
             <div className="w-1.5 h-6 bg-[#EC4899] rounded-full" />
             <h3 className="font-black text-lg text-gray-800 flex items-center gap-2 italic">
               말씀 해설 <Sparkles className="w-4 h-4 text-[#22C3C3]" />
             </h3>
           </div>
-          <Card className="border-none bg-[#FDF2F8] rounded-[2rem] shadow-sm">
+          <Card className="border border-pink-100 bg-[#FDF2F8] rounded-[2rem] shadow-sm">
             <CardContent className="p-7 text-gray-600 font-medium leading-relaxed text-[15px]">
               {isGenerating || isGlobalLoading ? (
                 <div className="flex items-center justify-center py-4 gap-3 text-muted-foreground animate-pulse">
@@ -198,7 +198,7 @@ export default function DashboardPage() {
 
         {/* 묵상 입력 폼 또는 완료 메시지 */}
         {todayUserMeditation ? (
-          <div className="bg-green-50 border-2 border-green-200 rounded-[2.5rem] p-10 text-center space-y-4 animate-in fade-in zoom-in duration-500 shadow-sm">
+          <div className="bg-green-50 border-2 border-green-200 rounded-[2.5rem] p-10 text-center space-y-4 animate-in fade-in zoom-in duration-500 shadow-md">
             <div className="bg-white w-20 h-20 rounded-full flex items-center justify-center mx-auto shadow-md border-4 border-green-100">
               <CheckCircle2 className="w-12 h-12 text-green-500" />
             </div>
@@ -210,8 +210,8 @@ export default function DashboardPage() {
             </div>
           </div>
         ) : (
-          <div className="space-y-6">
-            <Card className="border-none bg-[#FFFBEB] rounded-[2.5rem] p-7 space-y-8 shadow-sm">
+          <div className="space-y-6 pb-10">
+            <Card className="border border-amber-200 bg-[#FFFBEB] rounded-[2.5rem] p-7 space-y-8 shadow-sm">
               <div className="space-y-4">
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
@@ -226,11 +226,11 @@ export default function DashboardPage() {
                   placeholder="10자 이상 작성해주세요..."
                   value={reflection}
                   onChange={(e) => setReflection(e.target.value)}
-                  className="bg-white border-yellow-100 rounded-2xl min-h-[120px] p-4 text-sm focus-visible:ring-yellow-400 focus-visible:border-yellow-400 placeholder:text-gray-300 resize-none shadow-sm"
+                  className="bg-white border-amber-100 rounded-2xl min-h-[120px] p-4 text-sm focus-visible:ring-yellow-400 focus-visible:border-yellow-400 placeholder:text-gray-300 resize-none shadow-sm"
                 />
               </div>
 
-              <div className="h-px bg-yellow-200/50" />
+              <div className="h-px bg-amber-200/50" />
 
               <div className="space-y-4">
                 <div className="space-y-1">
@@ -246,13 +246,16 @@ export default function DashboardPage() {
                   placeholder="10자 이상 작성해주세요..."
                   value={resolution}
                   onChange={(e) => setResolution(e.target.value)}
-                  className="bg-white border-yellow-100 rounded-2xl min-h-[120px] p-4 text-sm focus-visible:ring-yellow-400 focus-visible:border-yellow-400 placeholder:text-gray-300 resize-none shadow-sm"
+                  className="bg-white border-amber-100 rounded-2xl min-h-[120px] p-4 text-sm focus-visible:ring-yellow-400 focus-visible:border-yellow-400 placeholder:text-gray-300 resize-none shadow-sm"
                 />
               </div>
             </Card>
 
-            <Card className="border-none bg-[#F5F3FF] rounded-[2.5rem] p-7 space-y-4 shadow-sm">
-              <h3 className="font-black text-lg text-[#5B21B6]">🙏 기도하기</h3>
+            <Card className="border border-violet-200 bg-[#F5F3FF] rounded-[2.5rem] p-7 space-y-4 shadow-sm">
+              <div className="flex items-center gap-2">
+                <div className="w-1.5 h-6 bg-[#8B5CF6] rounded-full" />
+                <h3 className="font-black text-lg text-[#5B21B6]">🙏 기도하기</h3>
+              </div>
               <Textarea 
                 placeholder="10자 이상 작성해주세요..."
                 value={prayer}
@@ -264,7 +267,7 @@ export default function DashboardPage() {
             <Button 
               onClick={handleComplete}
               disabled={isGenerating || isGlobalLoading}
-              className="w-full h-16 rounded-[1.5rem] bg-gradient-to-r from-[#A855F7] to-[#EC4899] font-bold text-lg shadow-xl hover:scale-[1.02] active:scale-95 transition-all mb-10"
+              className="w-full h-16 rounded-[1.5rem] bg-gradient-to-r from-[#A855F7] to-[#EC4899] font-bold text-lg shadow-xl hover:scale-[1.02] active:scale-95 transition-all mb-4"
             >
               {isGenerating || isGlobalLoading ? (
                 <Loader2 className="w-5 h-5 animate-spin mr-2" />
@@ -278,7 +281,7 @@ export default function DashboardPage() {
       </div>
 
       {/* 하단 네비게이션 */}
-      <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white/95 backdrop-blur-md border-t border-gray-100 px-6 py-4 flex justify-between items-center rounded-t-[2.5rem] z-50 shadow-[0_-10px_30px_rgba(0,0,0,0.05)]">
+      <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white/95 backdrop-blur-md border-t border-blue-100 px-6 py-4 flex justify-between items-center rounded-t-[2.5rem] z-50 shadow-[0_-10px_30px_rgba(0,0,0,0.05)]">
         <Link href="/dashboard" className="flex flex-col items-center gap-1 group">
           <BookOpen className="w-6 h-6 text-[#C026D3]" />
           <span className="text-[11px] font-black text-[#C026D3]">QT</span>
