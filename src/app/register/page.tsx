@@ -12,7 +12,7 @@ import { useRouter } from 'next/navigation';
 import { toast } from "@/hooks/use-toast";
 import { useAuth, useFirestore } from "@/firebase";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
-import { doc, setDoc } from "firebase/firestore";
+import { doc, setDoc, getDocs, query, where, collection } from "firebase/firestore";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -28,7 +28,6 @@ export default function RegisterPage() {
     password: ''
   });
 
-  // 한글 아이디를 안전한 이메일 형식으로 변환하는 함수 (브라우저 표준)
   const encodeUsername = (str: string) => {
     const encoder = new TextEncoder();
     const bytes = encoder.encode(str);
@@ -53,20 +52,32 @@ export default function RegisterPage() {
 
     setLoading(true);
     
-    const encodedId = encodeUsername(cleanUsername);
-    const internalEmail = `${encodedId}@yebon.teen`;
-
     try {
+      // 1. 아이디 중복 확인
+      const q = query(collection(firestore, "users"), where("username", "==", cleanUsername));
+      const querySnapshot = await getDocs(q);
+      
+      if (!querySnapshot.empty) {
+        toast({ title: "중복된 아이디", description: "이미 사용 중인 아이디입니다. 다른 아이디를 입력해주세요.", variant: "destructive" });
+        setLoading(false);
+        return;
+      }
+
+      // 2. 고유 내부 이메일 생성 (탈퇴 후 재가입을 가능하게 하기 위해 타임스탬프 포함)
+      const encodedId = encodeUsername(cleanUsername);
+      const internalEmail = `${encodedId}-${Date.now()}@yebon.teen`;
+
       const userCredential = await createUserWithEmailAndPassword(auth, internalEmail, formData.password);
       const user = userCredential.user;
 
       await updateProfile(user, { displayName: formData.name });
 
+      // 3. Firestore에 사용자 정보 저장
       await setDoc(doc(firestore, "users", user.uid), {
         id: user.uid,
         username: cleanUsername,
         displayName: formData.name,
-        email: internalEmail,
+        email: internalEmail, // 로그인 시 참조할 이메일
         role: formData.role,
         gender: formData.gender,
         phone: formData.phone,
@@ -80,11 +91,7 @@ export default function RegisterPage() {
     } catch (error: any) {
       console.error("가입 실패 상세:", error);
       let message = "회원가입 중 오류가 발생했습니다.";
-      
-      if (error.code === 'auth/email-already-in-use') message = "이미 사용 중인 아이디입니다.";
-      if (error.code === 'auth/invalid-email') message = "아이디 형식이 올바르지 않습니다.";
-      if (error.code === 'auth/weak-password') message = "비밀번호가 너무 약합니다.";
-      
+      if (error.code === 'auth/email-already-in-use') message = "시스템 오류가 발생했습니다. 잠시 후 다시 시도해주세요.";
       toast({ title: "가입 실패", description: message, variant: "destructive" });
       setLoading(false);
     }
@@ -118,7 +125,7 @@ export default function RegisterPage() {
               <div className="space-y-1">
                 <Label className="text-[10px] font-bold text-gray-400 ml-1">아이디</Label>
                 <Input 
-                  placeholder="사용할 아이디를 입력하세요" 
+                  placeholder="아이디를 입력하세요 (한글 가능)" 
                   className="h-14 bg-[#F8FAFC] border-[#F1F5F9] rounded-2xl px-6 focus-visible:ring-[#C026D3]/20"
                   value={formData.username}
                   onChange={(e) => setFormData({...formData, username: e.target.value})}

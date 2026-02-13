@@ -10,24 +10,17 @@ import { Label } from "@/components/ui/label";
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { toast } from "@/hooks/use-toast";
-import { useAuth } from "@/firebase";
+import { useAuth, useFirestore } from "@/firebase";
 import { signInWithEmailAndPassword } from "firebase/auth";
+import { collection, query, where, getDocs } from "firebase/firestore";
 
 export default function LoginPage() {
   const router = useRouter();
   const auth = useAuth();
+  const firestore = useFirestore();
   const [loading, setLoading] = useState(false);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-
-  // 한글 아이디를 안전한 이메일 형식으로 변환하는 함수
-  const encodeUsername = (str: string) => {
-    const encoder = new TextEncoder();
-    const bytes = encoder.encode(str);
-    return Array.from(bytes)
-      .map(b => b.toString(16).padStart(2, '0'))
-      .join('');
-  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,17 +32,28 @@ export default function LoginPage() {
     }
 
     setLoading(true);
-    const encodedId = encodeUsername(cleanUsername);
-    const internalEmail = `${encodedId}@yebon.teen`;
 
     try {
+      // 1. Firestore에서 해당 아이디를 가진 사용자의 실제 로그인 이메일 찾기
+      const q = query(collection(firestore, "users"), where("username", "==", cleanUsername));
+      const querySnapshot = await getDocs(q);
+
+      if (querySnapshot.empty) {
+        toast({ title: "로그인 실패", description: "존재하지 않는 아이디입니다.", variant: "destructive" });
+        setLoading(false);
+        return;
+      }
+
+      const userData = querySnapshot.docs[0].data();
+      const internalEmail = userData.email;
+
+      // 2. 찾은 내부 이메일로 로그인 진행
       await signInWithEmailAndPassword(auth, internalEmail, password);
       toast({ title: "로그인 성공", description: "반가워요! 오늘의 말씀을 묵상해볼까요?" });
       router.push('/dashboard');
     } catch (error: any) {
       console.error("로그인 실패:", error);
       let message = "아이디 또는 비밀번호를 확인해주세요.";
-      if (error.code === 'auth/user-not-found') message = "가입되지 않은 아이디입니다.";
       if (error.code === 'auth/wrong-password') message = "비밀번호가 일치하지 않습니다.";
       if (error.code === 'auth/invalid-credential') message = "로그인 정보가 올바르지 않습니다.";
       
