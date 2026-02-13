@@ -19,7 +19,9 @@ import {
   CheckCircle2,
   PackageOpen,
   User as UserIcon,
-  Loader2
+  Loader2,
+  Trophy,
+  Calendar
 } from "lucide-react";
 import { useUser, useFirestore, useDoc, useCollection, useMemoFirebase, updateDocumentNonBlocking } from "@/firebase";
 import { doc, collection, query, where, orderBy } from "firebase/firestore";
@@ -70,36 +72,73 @@ export default function MyProfilePage() {
     fileInputRef.current?.click();
   };
 
+  // 이미지 리사이징 헬퍼 함수
+  const resizeImage = (file: File, maxWidth = 400, maxHeight = 400): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = (event) => {
+        const img = new Image();
+        img.src = event.target?.result as string;
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+
+          // 가로세로 비율 유지하며 리사이징
+          if (width > height) {
+            if (width > maxWidth) {
+              height *= maxWidth / width;
+              width = maxWidth;
+            }
+          } else {
+            if (height > maxHeight) {
+              width *= maxHeight / height;
+              height = maxHeight;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx?.drawImage(img, 0, 0, width, height);
+          
+          // 압축률 0.7 적용하여 용량 획기적으로 감소 (base64 문자열 길이 최적화)
+          resolve(canvas.toDataURL('image/jpeg', 0.7));
+        };
+        img.onerror = reject;
+      };
+      reader.onerror = reject;
+    });
+  };
+
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !userRef) return;
 
-    // 이미지 파일 형식 및 크기 체크 (2MB 제한)
     if (!file.type.startsWith('image/')) {
       toast({ title: "파일 오류", description: "이미지 파일만 업로드 가능합니다.", variant: "destructive" });
       return;
     }
-    if (file.size > 2 * 1024 * 1024) {
-      toast({ title: "용량 초과", description: "2MB 이하의 이미지만 업로드 가능합니다.", variant: "destructive" });
-      return;
-    }
 
     setIsUploading(true);
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const base64String = reader.result as string;
+    try {
+      // 이미지 리사이징 및 압축 실행
+      const resizedBase64 = await resizeImage(file);
+      
       updateDocumentNonBlocking(userRef, {
-        profilePictureUrl: base64String,
+        profilePictureUrl: resizedBase64,
         updatedAt: new Date().toISOString()
       });
+      
+      toast({ title: "업로드 완료", description: "프로필 사진이 최적화되어 변경되었습니다. ✨" });
+    } catch (error) {
+      console.error("이미지 처리 오류:", error);
+      toast({ title: "오류 발생", description: "이미지를 처리하는 중 문제가 발생했습니다.", variant: "destructive" });
+    } finally {
       setIsUploading(false);
-      toast({ title: "업로드 완료", description: "프로필 사진이 변경되었습니다. ✨" });
-    };
-    reader.onerror = () => {
-      setIsUploading(false);
-      toast({ title: "오류 발생", description: "이미지를 읽는 중 문제가 발생했습니다.", variant: "destructive" });
-    };
-    reader.readAsDataURL(file);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
   };
 
   const handleRedeemClick = (item: any) => {
@@ -166,7 +205,7 @@ export default function MyProfilePage() {
       <div className="px-6 space-y-8 pt-4">
         <div className="flex flex-col items-center space-y-4 pt-4">
           <div className="relative group cursor-pointer" onClick={handleImageClick}>
-            <div className="w-32 h-32 rounded-full p-1 bg-gradient-to-tr from-pink-400 to-purple-500 shadow-xl overflow-hidden">
+            <div className="w-32 h-32 rounded-full p-1 bg-gradient-to-tr from-pink-400 to-purple-500 shadow-xl overflow-hidden relative">
               <Avatar className="w-full h-full border-4 border-white">
                 <AvatarImage 
                   src={userProfile?.profilePictureUrl || `https://picsum.photos/seed/${user?.uid}/200`} 
@@ -177,8 +216,9 @@ export default function MyProfilePage() {
                 </AvatarFallback>
               </Avatar>
               {isUploading && (
-                <div className="absolute inset-0 bg-black/40 flex items-center justify-center rounded-full">
-                  <Loader2 className="w-8 h-8 text-white animate-spin" />
+                <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center rounded-full z-10">
+                  <Loader2 className="w-8 h-8 text-white animate-spin mb-1" />
+                  <span className="text-[10px] text-white font-bold">압축 중...</span>
                 </div>
               )}
             </div>
@@ -358,11 +398,11 @@ export default function MyProfilePage() {
           <span className="text-[11px] font-bold">QT</span>
         </Link>
         <div className="flex flex-col items-center gap-1 group text-gray-400">
-          <Gift className="w-6 h-6" />
+          <Calendar className="w-6 h-6" />
           <span className="text-[11px] font-bold">이벤트</span>
         </div>
         <Link href="/dashboard/ranking" className="flex flex-col items-center gap-1 group text-gray-400">
-          <Star className="w-6 h-6" />
+          <Trophy className="w-6 h-6" />
           <span className="text-[11px] font-bold">랭킹</span>
         </Link>
         <Link href="/dashboard/quiz" className="flex flex-col items-center gap-1 group text-gray-400">
