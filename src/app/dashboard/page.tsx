@@ -60,7 +60,7 @@ export default function DashboardPage() {
 
       setIsGenerating(true);
       try {
-        // 1순위: 미리 정의된 데이터가 있는지 확인 (시편 23:1 등 수동 입력값)
+        // 1순위: 미리 정의된 데이터가 있는지 확인
         if (currentVerse.preDefined) {
           setDocumentNonBlocking(globalMeditationRef, {
             ...currentVerse.preDefined,
@@ -187,8 +187,7 @@ export default function DashboardPage() {
               말씀해설 <Sparkles className="w-4 h-4 text-[#22C3C3] animate-pulse" />
             </h3>
           </div>
-          <Card className="border-2 border-pink-200 bg-white rounded-[2.5rem] shadow-md overflow-hidden">
-            <div className="h-2 bg-[#FDF2F8]" />
+          <Card className="border-2 border-pink-200 bg-[#FFF1F2] rounded-[2.5rem] shadow-md overflow-hidden">
             <CardContent className="p-7 text-gray-700 font-medium leading-relaxed text-[15px]">
               {isGenerating || isGlobalLoading ? (
                 <div className="flex flex-col items-center justify-center py-6 gap-3 text-muted-foreground animate-pulse">
