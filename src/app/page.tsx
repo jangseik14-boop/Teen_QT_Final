@@ -17,25 +17,28 @@ export default function LoginPage() {
   const router = useRouter();
   const auth = useAuth();
   const [loading, setLoading] = useState(false);
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password) {
+    if (!username || !password) {
       toast({ title: "로그인 오류", description: "아이디와 비밀번호를 입력해주세요.", variant: "destructive" });
       return;
     }
 
     setLoading(true);
+    // 내부적으로 이메일 형식을 만들어 로그인 처리
+    const internalEmail = `${username}@yebon.teen`;
+
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      await signInWithEmailAndPassword(auth, internalEmail, password);
       toast({ title: "로그인 성공", description: "반가워요! 오늘의 말씀을 묵상해볼까요?" });
       router.push('/dashboard');
     } catch (error: any) {
       console.error("로그인 실패:", error);
       let message = "아이디 또는 비밀번호를 확인해주세요.";
-      if (error.code === 'auth/user-not-found') message = "가입되지 않은 이메일입니다.";
+      if (error.code === 'auth/user-not-found') message = "가입되지 않은 아이디입니다.";
       if (error.code === 'auth/wrong-password') message = "비밀번호가 일치하지 않습니다.";
       
       toast({ title: "로그인 실패", description: message, variant: "destructive" });
@@ -61,9 +64,9 @@ export default function LoginPage() {
               <div className="space-y-2">
                 <Input 
                   type="text" 
-                  placeholder="아이디 (이메일)" 
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="아이디" 
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
                   className="h-14 bg-[#F8FAFC] border-[#F1F5F9] rounded-2xl px-6 focus-visible:ring-[#C026D3]/20 placeholder:text-gray-300"
                 />
               </div>
