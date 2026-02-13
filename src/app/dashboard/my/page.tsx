@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -17,7 +17,9 @@ import {
   ShieldCheck,
   Lock,
   CheckCircle2,
-  PackageOpen
+  PackageOpen,
+  User as UserIcon,
+  Loader2
 } from "lucide-react";
 import { useUser, useFirestore, useDoc, useCollection, useMemoFirebase, updateDocumentNonBlocking } from "@/firebase";
 import { doc, collection, query, where, orderBy } from "firebase/firestore";
@@ -35,17 +37,16 @@ export default function MyProfilePage() {
   const auth = useAuth();
   const firestore = useFirestore();
   const router = useRouter();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // 쿠폰 교환용 다이얼로그 상태
+  // 상태 관리
   const [isAdminDialogOpen, setIsAdminDialogOpen] = useState(false);
   const [adminPassword, setAdminPassword] = useState("");
   const [selectedItem, setSelectedItem] = useState<any>(null);
-
-  // 관리자 모드 진입용 다이얼로그 상태
   const [isAdminEntryDialogOpen, setIsAdminEntryDialogOpen] = useState(false);
   const [entryPassword, setEntryPassword] = useState("");
-
   const [showUsedHistory, setShowUsedHistory] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
 
   const userRef = useMemoFirebase(() => user ? doc(firestore, "users", user.uid) : null, [user, firestore]);
   const { data: userProfile } = useDoc(userRef);
@@ -65,12 +66,47 @@ export default function MyProfilePage() {
     router.push("/");
   };
 
+  const handleImageClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !userRef) return;
+
+    // 이미지 파일 형식 및 크기 체크 (2MB 제한)
+    if (!file.type.startsWith('image/')) {
+      toast({ title: "파일 오류", description: "이미지 파일만 업로드 가능합니다.", variant: "destructive" });
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      toast({ title: "용량 초과", description: "2MB 이하의 이미지만 업로드 가능합니다.", variant: "destructive" });
+      return;
+    }
+
+    setIsUploading(true);
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64String = reader.result as string;
+      updateDocumentNonBlocking(userRef, {
+        profilePictureUrl: base64String,
+        updatedAt: new Date().toISOString()
+      });
+      setIsUploading(false);
+      toast({ title: "업로드 완료", description: "프로필 사진이 변경되었습니다. ✨" });
+    };
+    reader.onerror = () => {
+      setIsUploading(false);
+      toast({ title: "오류 발생", description: "이미지를 읽는 중 문제가 발생했습니다.", variant: "destructive" });
+    };
+    reader.readAsDataURL(file);
+  };
+
   const handleRedeemClick = (item: any) => {
     setSelectedItem(item);
     setIsAdminDialogOpen(true);
   };
 
-  // 쿠폰 교환용 비밀번호 확인
   const handleAdminAuth = () => {
     if (adminPassword === "141414") {
       if (user && selectedItem) {
@@ -89,7 +125,6 @@ export default function MyProfilePage() {
     }
   };
 
-  // 관리자 모드 진입용 비밀번호 확인
   const handleAdminEntryAuth = () => {
     if (entryPassword === "141414") {
       router.push("/dashboard/admin");
@@ -115,7 +150,6 @@ export default function MyProfilePage() {
 
   return (
     <div className="max-w-md mx-auto bg-white min-h-screen pb-24 shadow-2xl overflow-hidden relative font-body">
-      {/* Header */}
       <header className="px-6 pt-8 pb-4 flex justify-between items-start sticky top-0 z-40 bg-white/80 backdrop-blur-md">
         <div className="space-y-1">
           <h1 className="text-2xl font-black text-[#C026D3] tracking-tight italic">예본TeenQT</h1>
@@ -130,18 +164,34 @@ export default function MyProfilePage() {
       </header>
 
       <div className="px-6 space-y-8 pt-4">
-        {/* Profile Section */}
         <div className="flex flex-col items-center space-y-4 pt-4">
-          <div className="relative group">
-            <div className="w-32 h-32 rounded-full p-1 bg-gradient-to-tr from-pink-400 to-purple-500 shadow-xl">
+          <div className="relative group cursor-pointer" onClick={handleImageClick}>
+            <div className="w-32 h-32 rounded-full p-1 bg-gradient-to-tr from-pink-400 to-purple-500 shadow-xl overflow-hidden">
               <Avatar className="w-full h-full border-4 border-white">
-                <AvatarImage src={`https://picsum.photos/seed/${user?.uid}/200`} />
-                <AvatarFallback>{userProfile?.displayName?.[0]}</AvatarFallback>
+                <AvatarImage 
+                  src={userProfile?.profilePictureUrl || `https://picsum.photos/seed/${user?.uid}/200`} 
+                  className="object-cover"
+                />
+                <AvatarFallback className="bg-white text-2xl font-black text-purple-400">
+                  {userProfile?.displayName?.[0]}
+                </AvatarFallback>
               </Avatar>
+              {isUploading && (
+                <div className="absolute inset-0 bg-black/40 flex items-center justify-center rounded-full">
+                  <Loader2 className="w-8 h-8 text-white animate-spin" />
+                </div>
+              )}
             </div>
             <button className="absolute bottom-1 right-1 bg-white p-2 rounded-full shadow-lg border border-gray-100 hover:scale-110 transition-transform">
               <Camera className="w-4 h-4 text-gray-500" />
             </button>
+            <input 
+              type="file" 
+              ref={fileInputRef} 
+              className="hidden" 
+              accept="image/*" 
+              onChange={handleImageChange}
+            />
           </div>
           
           <div className="text-center space-y-1">
@@ -171,7 +221,6 @@ export default function MyProfilePage() {
           )}
         </div>
 
-        {/* 내 보관함 Section */}
         <div className="space-y-4">
           <div className="bg-[#FDF4FF] rounded-[2.5rem] p-6 space-y-4 shadow-sm border-2 border-pink-50">
             <div className="flex justify-between items-center px-2">
@@ -212,7 +261,6 @@ export default function MyProfilePage() {
           </div>
         </div>
 
-        {/* 사용 완료 내역 */}
         <div className="space-y-2">
           <button 
             onClick={() => setShowUsedHistory(!showUsedHistory)}
@@ -242,7 +290,6 @@ export default function MyProfilePage() {
         </div>
       </div>
 
-      {/* 쿠폰 교환 확인 다이얼로그 */}
       <Dialog open={isAdminDialogOpen} onOpenChange={setIsAdminDialogOpen}>
         <DialogContent className="rounded-[2.5rem] max-w-[320px] p-8 border-none shadow-2xl">
           <DialogHeader className="space-y-3">
@@ -274,7 +321,6 @@ export default function MyProfilePage() {
         </DialogContent>
       </Dialog>
 
-      {/* 관리자 모드 진입 확인 다이얼로그 */}
       <Dialog open={isAdminEntryDialogOpen} onOpenChange={setIsAdminEntryDialogOpen}>
         <DialogContent className="rounded-[2.5rem] max-w-[320px] p-8 border-none shadow-2xl">
           <DialogHeader className="space-y-3">
@@ -306,7 +352,6 @@ export default function MyProfilePage() {
         </DialogContent>
       </Dialog>
 
-      {/* Bottom Nav */}
       <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white/95 backdrop-blur-md border-t-2 border-blue-100 px-6 py-4 flex justify-between items-center rounded-t-[2.5rem] z-50 shadow-[0_-10px_30px_rgba(0,0,0,0.1)]">
         <Link href="/dashboard" className="flex flex-col items-center gap-1 group text-gray-400">
           <CreditCard className="w-6 h-6" />
@@ -325,21 +370,10 @@ export default function MyProfilePage() {
           <span className="text-[11px] font-bold">상점</span>
         </Link>
         <Link href="/dashboard/my" className="flex flex-col items-center gap-1 group">
-          <User className="w-6 h-6 text-[#C026D3]" />
+          <UserIcon className="w-6 h-6 text-[#C026D3]" />
           <span className="text-[11px] font-black text-[#C026D3]">MY</span>
         </Link>
       </nav>
-    </div>
-  );
-}
-
-function User({ className, ...props }: any) {
-  return (
-    <div className={className}>
-      <Avatar className="w-6 h-6">
-        <AvatarImage src={`https://picsum.photos/seed/user/200`} />
-        <AvatarFallback>U</AvatarFallback>
-      </Avatar>
     </div>
   );
 }
