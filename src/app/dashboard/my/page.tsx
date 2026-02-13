@@ -36,9 +36,15 @@ export default function MyProfilePage() {
   const firestore = useFirestore();
   const router = useRouter();
 
+  // 쿠폰 교환용 다이얼로그 상태
   const [isAdminDialogOpen, setIsAdminDialogOpen] = useState(false);
   const [adminPassword, setAdminPassword] = useState("");
   const [selectedItem, setSelectedItem] = useState<any>(null);
+
+  // 관리자 모드 진입용 다이얼로그 상태
+  const [isAdminEntryDialogOpen, setIsAdminEntryDialogOpen] = useState(false);
+  const [entryPassword, setEntryPassword] = useState("");
+
   const [showUsedHistory, setShowUsedHistory] = useState(false);
 
   const userRef = useMemoFirebase(() => user ? doc(firestore, "users", user.uid) : null, [user, firestore]);
@@ -64,8 +70,9 @@ export default function MyProfilePage() {
     setIsAdminDialogOpen(true);
   };
 
+  // 쿠폰 교환용 비밀번호 확인
   const handleAdminAuth = () => {
-    if (adminPassword === "141412") {
+    if (adminPassword === "141414") {
       if (user && selectedItem) {
         const itemRef = doc(firestore, `users/${user.uid}/inventory`, selectedItem.id);
         updateDocumentNonBlocking(itemRef, {
@@ -77,6 +84,17 @@ export default function MyProfilePage() {
         setAdminPassword("");
         setSelectedItem(null);
       }
+    } else {
+      toast({ title: "비밀번호 오류", description: "관리자 비밀번호가 일치하지 않습니다.", variant: "destructive" });
+    }
+  };
+
+  // 관리자 모드 진입용 비밀번호 확인
+  const handleAdminEntryAuth = () => {
+    if (entryPassword === "141414") {
+      router.push("/dashboard/admin");
+      setIsAdminEntryDialogOpen(false);
+      setEntryPassword("");
     } else {
       toast({ title: "비밀번호 오류", description: "관리자 비밀번호가 일치하지 않습니다.", variant: "destructive" });
     }
@@ -104,7 +122,7 @@ export default function MyProfilePage() {
           <p className="text-gray-400 text-[13px] font-medium">환영합니다, {userProfile?.displayName || "사용자"}님!</p>
         </div>
         <div className="bg-[#FEF9C3] px-4 py-2 rounded-full flex items-center gap-2 shadow-sm border border-yellow-200">
-          < Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
+          <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
           <span className="text-sm font-black text-yellow-700 tracking-tight">
             {(userProfile?.points || 0).toLocaleString()} D
           </span>
@@ -139,7 +157,7 @@ export default function MyProfilePage() {
           </div>
 
           {canSeeAdminMode && (
-            <Link href="/dashboard/admin" className="w-full">
+            <button onClick={() => setIsAdminEntryDialogOpen(true)} className="w-full text-left">
               <div className="w-full flex items-center justify-between p-5 bg-rose-50 border-2 border-rose-100 rounded-[1.5rem] group hover:bg-rose-100 transition-all shadow-sm">
                 <div className="flex items-center gap-3">
                   <div className="bg-white p-2 rounded-xl shadow-sm">
@@ -149,7 +167,7 @@ export default function MyProfilePage() {
                 </div>
                 <ChevronDown className="w-5 h-5 text-rose-300 -rotate-90" />
               </div>
-            </Link>
+            </button>
           )}
         </div>
 
@@ -224,22 +242,22 @@ export default function MyProfilePage() {
         </div>
       </div>
 
-      {/* 관리자 확인 다이얼로그 */}
+      {/* 쿠폰 교환 확인 다이얼로그 */}
       <Dialog open={isAdminDialogOpen} onOpenChange={setIsAdminDialogOpen}>
         <DialogContent className="rounded-[2.5rem] max-w-[320px] p-8 border-none shadow-2xl">
           <DialogHeader className="space-y-3">
             <div className="w-12 h-12 bg-rose-50 rounded-2xl flex items-center justify-center mx-auto mb-2">
               <Lock className="w-6 h-6 text-rose-500" />
             </div>
-            <DialogTitle className="text-xl font-black text-center text-gray-800 tracking-tight italic">관리자 확인</DialogTitle>
+            <DialogTitle className="text-xl font-black text-center text-gray-800 tracking-tight italic">교환 확인</DialogTitle>
             <DialogDescription className="text-center text-gray-400 font-bold text-sm leading-relaxed">
-              선생님께 이 화면을 보여드리고<br/>관리자 비밀번호를 입력해주세요.
+              선생님께 이 화면을 보여드리고<br/>비밀번호를 입력해주세요.
             </DialogDescription>
           </DialogHeader>
           <div className="py-4">
             <Input 
               type="password"
-              placeholder="비밀번호 입력"
+              placeholder="비밀번호"
               value={adminPassword}
               onChange={(e) => setAdminPassword(e.target.value)}
               className="h-14 bg-gray-50 border-none rounded-2xl text-center text-2xl tracking-[1em] font-black focus-visible:ring-rose-400"
@@ -251,6 +269,38 @@ export default function MyProfilePage() {
               className="w-full h-14 rounded-2xl bg-rose-500 hover:bg-rose-600 font-black text-lg shadow-lg shadow-rose-100"
             >
               교환 완료하기
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* 관리자 모드 진입 확인 다이얼로그 */}
+      <Dialog open={isAdminEntryDialogOpen} onOpenChange={setIsAdminEntryDialogOpen}>
+        <DialogContent className="rounded-[2.5rem] max-w-[320px] p-8 border-none shadow-2xl">
+          <DialogHeader className="space-y-3">
+            <div className="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center mx-auto mb-2">
+              <ShieldCheck className="w-6 h-6 text-blue-500" />
+            </div>
+            <DialogTitle className="text-xl font-black text-center text-gray-800 tracking-tight italic">관리자 인증</DialogTitle>
+            <DialogDescription className="text-center text-gray-400 font-bold text-sm leading-relaxed">
+              관리자 모드에 진입하기 위해<br/>비밀번호를 입력해주세요.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <Input 
+              type="password"
+              placeholder="비밀번호"
+              value={entryPassword}
+              onChange={(e) => setEntryPassword(e.target.value)}
+              className="h-14 bg-gray-50 border-none rounded-2xl text-center text-2xl tracking-[1em] font-black focus-visible:ring-blue-400"
+            />
+          </div>
+          <DialogFooter>
+            <Button 
+              onClick={handleAdminEntryAuth}
+              className="w-full h-14 rounded-2xl bg-blue-600 hover:bg-blue-700 font-black text-lg shadow-lg shadow-blue-100"
+            >
+              인증 완료
             </Button>
           </DialogFooter>
         </DialogContent>
