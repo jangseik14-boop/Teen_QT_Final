@@ -26,6 +26,7 @@ import { generateMeditation } from "@/ai/flows/generate-meditation";
 import { toast } from "@/hooks/use-toast";
 import { getVerseForToday } from "@/lib/bible-verses";
 import { Separator } from "@/components/ui/separator";
+import { cn } from "@/lib/utils";
 
 // 오늘 날짜 ID 생성 (YYYY-MM-DD)
 const getTodayId = () => new Date().toISOString().split('T')[0];
@@ -57,12 +58,10 @@ export default function DashboardPage() {
   // 4. AI 해설 자동 생성 및 저장 로직
   useEffect(() => {
     const fetchOrGenerateAI = async () => {
-      // 이미 데이터가 있거나 로딩 중이면 건너뜀
       if (isGlobalLoading || globalMeditation?.commentary || isGenerating) return;
 
       setIsGenerating(true);
       try {
-        // 1순위: 미리 정의된 데이터가 있는지 확인
         if (currentVerse.preDefined) {
           setDocumentNonBlocking(globalMeditationRef, {
             ...currentVerse.preDefined,
@@ -71,7 +70,6 @@ export default function DashboardPage() {
             createdAt: new Date().toISOString()
           }, { merge: true });
         } else {
-          // 2순위: 없다면 AI 실시간 생성
           const result = await generateMeditation({
             verse: currentVerse.ref,
             verseText: currentVerse.text
@@ -101,7 +99,6 @@ export default function DashboardPage() {
   const handleComplete = () => {
     if (!user || !userRef || !userMeditationRef) return;
     
-    // 유효성 검사: 각 항목 10자 이상
     if (reflection.trim().length < 10 || resolution.trim().length < 10 || prayer.trim().length < 10) {
       toast({ 
         title: "조금 더 정성을 들여볼까요?", 
@@ -116,7 +113,6 @@ export default function DashboardPage() {
       return;
     }
 
-    // 1. 개인 묵상 기록 저장
     setDocumentNonBlocking(userMeditationRef, {
       completedAt: new Date().toISOString(),
       reflection,
@@ -125,7 +121,6 @@ export default function DashboardPage() {
       verse: currentVerse.ref
     }, { merge: true });
 
-    // 2. 달란트 지급 (50D)
     const currentPoints = userProfile?.points || 0;
     updateDocumentNonBlocking(userRef, {
       points: currentPoints + 50,
@@ -138,13 +133,23 @@ export default function DashboardPage() {
     });
   };
 
+  const CharCount = ({ count }: { count: number }) => (
+    <span className={cn(
+      "text-[11px] font-bold px-2 py-0.5 rounded-full border",
+      count >= 10 
+        ? "bg-green-100 text-green-600 border-green-200" 
+        : "bg-gray-100 text-gray-400 border-gray-200"
+    )}>
+      {count} / 10자 이상
+    </span>
+  );
+
   const todayStr = new Intl.DateTimeFormat('ko-KR', { 
     year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' 
   }).format(new Date());
 
   return (
     <div className="max-w-md mx-auto bg-[#F0F7FF] min-h-screen pb-24 shadow-2xl overflow-hidden relative border-x border-blue-200 font-body">
-      {/* 상단 헤더 */}
       <header className="px-6 pt-8 pb-4 flex justify-between items-start bg-white/90 backdrop-blur-md sticky top-0 z-40 border-b-2 border-blue-100 shadow-sm">
         <div className="space-y-1">
           <h1 className="text-3xl font-black text-[#C026D3] tracking-tight italic">예본TeenQT</h1>
@@ -159,7 +164,6 @@ export default function DashboardPage() {
       </header>
 
       <div className="px-5 space-y-6 pt-6 pb-10">
-        {/* 오늘의 주제 카드 */}
         <Card className="border-2 border-blue-300 bg-white rounded-[2.5rem] overflow-hidden shadow-md">
           <CardContent className="p-8 space-y-3">
             <div className="flex items-center gap-2 text-[#6366F1] mb-1">
@@ -174,14 +178,12 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        {/* 말씀 구절 카드 */}
         <Card className="border-2 border-sky-300 bg-[#F0F9FF] rounded-[2.5rem] shadow-md">
           <CardContent className="p-8 text-center italic text-[#0369A1] font-bold text-lg leading-relaxed">
             "{currentVerse.text}"
           </CardContent>
         </Card>
 
-        {/* 말씀해설 섹션 */}
         <div className="space-y-3">
           <div className="flex items-center gap-2 px-1">
             <div className="w-1.5 h-6 bg-[#EC4899] rounded-full" />
@@ -205,7 +207,6 @@ export default function DashboardPage() {
           </Card>
         </div>
 
-        {/* 묵상 입력 폼 또는 완료 메시지 */}
         {todayUserMeditation ? (
           <div className="bg-green-50 border-2 border-green-300 rounded-[2.5rem] p-10 text-center space-y-4 animate-in fade-in zoom-in duration-500 shadow-lg">
             <div className="bg-white w-20 h-20 rounded-full flex items-center justify-center mx-auto shadow-md border-4 border-green-100">
@@ -220,27 +221,30 @@ export default function DashboardPage() {
           </div>
         ) : (
           <div className="space-y-8">
-            {/* 말씀묵상 (Q1, Q2 통합 섹션) */}
             <div className="space-y-3">
-              <div className="flex items-center gap-2 px-1">
-                <div className="w-1.5 h-6 bg-[#F59E0B] rounded-full" />
-                <h3 className="font-black text-lg text-gray-800 flex items-center gap-2 italic">
-                  말씀묵상 <HelpCircle className="w-4 h-4 text-[#F59E0B]" />
-                </h3>
+              <div className="flex items-center justify-between px-1">
+                <div className="flex items-center gap-2">
+                  <div className="w-1.5 h-6 bg-[#F59E0B] rounded-full" />
+                  <h3 className="font-black text-lg text-gray-800 flex items-center gap-2 italic">
+                    말씀묵상 <HelpCircle className="w-4 h-4 text-[#F59E0B]" />
+                  </h3>
+                </div>
               </div>
               <Card className="border-2 border-amber-200 bg-[#FFFBEB] rounded-[2.5rem] shadow-md overflow-hidden">
                 <CardContent className="p-7 space-y-6">
-                  {/* Q1 질문 및 입력 */}
                   <div className="space-y-3">
-                    <div className="text-[#92400E] font-black text-lg leading-snug">
-                      {isGenerating || isGlobalLoading ? (
-                        "질문을 생각 중..."
-                      ) : (
-                        `Q1. ${globalMeditation?.q1 || "말씀을 통해 느낀 점을 적어보세요."}`
-                      )}
+                    <div className="flex justify-between items-start gap-2">
+                      <div className="text-[#92400E] font-black text-base leading-snug flex-1">
+                        {isGenerating || isGlobalLoading ? (
+                          "질문을 생각 중..."
+                        ) : (
+                          `Q1. ${globalMeditation?.q1 || "말씀을 통해 느낀 점을 적어보세요."}`
+                        )}
+                      </div>
+                      <CharCount count={reflection.length} />
                     </div>
                     <Textarea 
-                      placeholder="여기에 솔직한 마음을 적어주세요... (10자 이상)"
+                      placeholder="여기에 솔직한 마음을 적어주세요..."
                       value={reflection}
                       onChange={(e) => setReflection(e.target.value)}
                       className="bg-white border-2 border-amber-100 rounded-2xl min-h-[120px] p-4 text-sm focus-visible:ring-yellow-400 focus-visible:border-yellow-400 placeholder:text-gray-300 resize-none shadow-inner"
@@ -249,17 +253,19 @@ export default function DashboardPage() {
 
                   <Separator className="bg-amber-100" />
 
-                  {/* Q2 질문 및 입력 */}
                   <div className="space-y-3">
-                    <div className="text-[#92400E] font-black text-lg leading-snug">
-                      {isGenerating || isGlobalLoading ? (
-                        "다짐을 생각 중..."
-                      ) : (
-                        `Q2. ${globalMeditation?.q2 || "오늘 하루 무엇을 실천하고 싶나요?"}`
-                      )}
+                    <div className="flex justify-between items-start gap-2">
+                      <div className="text-[#92400E] font-black text-base leading-snug flex-1">
+                        {isGenerating || isGlobalLoading ? (
+                          "다짐을 생각 중..."
+                        ) : (
+                          `Q2. ${globalMeditation?.q2 || "오늘 하루 무엇을 실천하고 싶나요?"}`
+                        )}
+                      </div>
+                      <CharCount count={resolution.length} />
                     </div>
                     <Textarea 
-                      placeholder="오늘 하루 꼭 지킬 한 가지를 적어봐요! (10자 이상)"
+                      placeholder="오늘 하루 꼭 지킬 한 가지를 적어봐요!"
                       value={resolution}
                       onChange={(e) => setResolution(e.target.value)}
                       className="bg-white border-2 border-amber-100 rounded-2xl min-h-[120px] p-4 text-sm focus-visible:ring-yellow-400 focus-visible:border-yellow-400 placeholder:text-gray-300 resize-none shadow-inner"
@@ -269,18 +275,20 @@ export default function DashboardPage() {
               </Card>
             </div>
 
-            {/* 기도 섹션 */}
             <div className="space-y-3">
-              <div className="flex items-center gap-2 px-1">
-                <div className="w-1.5 h-6 bg-[#8B5CF6] rounded-full" />
-                <h3 className="font-black text-lg text-gray-800 flex items-center gap-2 italic">
-                  🙏 오늘의 기도
-                </h3>
+              <div className="flex items-center justify-between px-1">
+                <div className="flex items-center gap-2">
+                  <div className="w-1.5 h-6 bg-[#8B5CF6] rounded-full" />
+                  <h3 className="font-black text-lg text-gray-800 flex items-center gap-2 italic">
+                    🙏 오늘의 기도
+                  </h3>
+                </div>
+                <CharCount count={prayer.length} />
               </div>
               <Card className="border-2 border-violet-200 bg-[#F5F3FF] rounded-[2.5rem] shadow-md overflow-hidden">
                 <CardContent className="p-7">
                   <Textarea 
-                    placeholder="하나님께 드리는 짧은 기도문을 적어보세요. (10자 이상)"
+                    placeholder="하나님께 드리는 짧은 기도문을 적어보세요..."
                     value={prayer}
                     onChange={(e) => setPrayer(e.target.value)}
                     className="bg-white border-2 border-violet-100 rounded-2xl min-h-[120px] p-4 text-sm focus-visible:ring-violet-400 focus-visible:border-violet-400 placeholder:text-gray-300 resize-none shadow-inner"
@@ -289,7 +297,6 @@ export default function DashboardPage() {
               </Card>
             </div>
 
-            {/* 완료 버튼 */}
             <Button 
               onClick={handleComplete}
               disabled={isGenerating || isGlobalLoading}
@@ -306,7 +313,6 @@ export default function DashboardPage() {
         )}
       </div>
 
-      {/* 하단 네비게이션 */}
       <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white/95 backdrop-blur-md border-t-2 border-blue-100 px-6 py-4 flex justify-between items-center rounded-t-[2.5rem] z-50 shadow-[0_-10px_30px_rgba(0,0,0,0.1)]">
         <Link href="/dashboard" className="flex flex-col items-center gap-1 group">
           <BookOpen className="w-6 h-6 text-[#C026D3]" />
