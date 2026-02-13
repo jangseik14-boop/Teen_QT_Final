@@ -1,10 +1,11 @@
 
-# Firebase App Hosting 설정
+# Firebase App Hosting 비용 최적화 설정
 runConfig:
-  # 학생들이 동시에 접속할 때를 대비해 메모리를 1GiB로 넉넉하게 잡았습니다.
-  # AI 연산이나 서버 사이드 렌더링을 더 쾌적하게 처리합니다.
-  maxInstances: 10
+  # 사용자가 없을 때 인스턴스를 0으로 유지하여 비용 발생 방지 (Scale-to-zero)
   minInstances: 0
+  # 최대 인스턴스를 제한하여 갑작스러운 트래픽 폭주로 인한 과금 방지
+  maxInstances: 5
+  # Next.js 15와 Genkit 구동을 위한 최적의 메모리 설정
   memoryMiB: 1024
   cpu: 1
 
