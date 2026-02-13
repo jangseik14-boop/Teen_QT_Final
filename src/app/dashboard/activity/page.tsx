@@ -7,18 +7,13 @@ import { Button } from "@/components/ui/button";
 import { 
   Zap, 
   Trophy, 
-  BookOpen, 
-  ShoppingBag, 
-  User as UserIcon,
   CheckCircle2,
   XCircle,
   Loader2,
   Sparkles,
   HelpCircle,
-  Star,
   Gift
 } from "lucide-react";
-import Link from "next/link";
 import { useUser, useFirestore, useDoc, useCollection, setDocumentNonBlocking, updateDocumentNonBlocking, useMemoFirebase } from "@/firebase";
 import { doc, collection, query, orderBy, limit } from "firebase/firestore";
 import { getQuizForToday } from "@/lib/daily-quizzes";
@@ -61,7 +56,6 @@ export default function ActivityPage() {
     let count = 0;
     const today = new Date();
     
-    // 오늘부터 거꾸로 7일간 확인
     for (let i = 0; i < 7; i++) {
       const d = new Date();
       d.setDate(today.getDate() - i);
@@ -69,11 +63,10 @@ export default function ActivityPage() {
       if (meditationDates.has(dateStr)) {
         count++;
       } else {
-        break; // 연속성이 깨지면 중단
+        break; 
       }
     }
     
-    // 이미 오늘 보상을 받았는지 확인 (중복 지급 방지)
     const alreadyClaimedToday = userProfile?.lastStreakClaimedAt === todayId;
     
     return { 
@@ -88,7 +81,6 @@ export default function ActivityPage() {
     setIsSubmitted(true);
     const isCorrect = selectedOption === currentQuiz.correctIndex;
 
-    // 참여 기록 저장 (보상 10D로 변경)
     setDocumentNonBlocking(userActivityRef!, {
       completedAt: new Date().toISOString(),
       isCorrect,
@@ -132,168 +124,131 @@ export default function ActivityPage() {
   };
 
   return (
-    <div className="max-w-md mx-auto bg-[#F8FAFC] min-h-screen pb-32 shadow-2xl overflow-hidden relative border-x border-gray-100 font-body">
-      <header className="px-6 pt-8 pb-4 flex justify-between items-start bg-white/90 backdrop-blur-md sticky top-0 z-40 border-b border-gray-100 shadow-sm">
-        <div className="space-y-1">
-          <h1 className="text-2xl font-black text-[#C026D3] tracking-tight italic">예본Teen활동</h1>
-          <p className="text-gray-400 text-[13px] font-bold">매일매일 즐거운 신앙 루틴!</p>
-        </div>
-        <div className="bg-[#FEF9C3] px-4 py-2 rounded-full flex items-center gap-2 shadow-sm border border-yellow-200">
-          <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
-          <span className="text-sm font-black text-yellow-700 tracking-tight">{(userProfile?.points || 0).toLocaleString()} D</span>
-        </div>
-      </header>
-
-      <div className="px-6 py-8 space-y-8">
-        <div className="space-y-4">
-          <div className="flex items-center gap-2 px-1">
-            <Zap className="w-5 h-5 text-yellow-500 fill-yellow-500" />
-            <h2 className="text-xl font-black text-gray-800 italic">오늘의 데일리 퀴즈</h2>
-          </div>
-
-          <Card className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden ring-1 ring-gray-100">
-            <CardContent className="p-8 space-y-6">
-              <div className="bg-purple-50 p-4 rounded-2xl border border-purple-100 relative">
-                <Sparkles className="absolute -top-2 -right-2 w-6 h-6 text-purple-300 animate-pulse" />
-                <p className="text-lg font-black text-purple-900 leading-tight">
-                  {currentQuiz.question}
-                </p>
-              </div>
-
-              <div className="space-y-3">
-                {currentQuiz.options.map((option: string, index: number) => {
-                  const isCompleted = !!userActivity || isSubmitted;
-                  const isCorrect = index === currentQuiz.correctIndex;
-                  const isSelected = selectedOption === index || userActivity?.selectedOption === index;
-                  
-                  let variantClass = "bg-gray-50 border-gray-100 text-gray-700";
-                  if (isSelected && !isCompleted) variantClass = "bg-purple-100 border-purple-300 text-purple-700 ring-2 ring-purple-200";
-                  if (isCompleted && isCorrect) variantClass = "bg-green-100 border-green-300 text-green-700 ring-2 ring-green-200";
-                  if (isCompleted && isSelected && !isCorrect) variantClass = "bg-rose-100 border-rose-300 text-rose-700";
-
-                  return (
-                    <button
-                      key={index}
-                      disabled={isCompleted}
-                      onClick={() => setSelectedOption(index)}
-                      className={cn(
-                        "w-full p-4 rounded-2xl border-2 text-left font-bold text-sm transition-all duration-200 flex justify-between items-center group",
-                        variantClass
-                      )}
-                    >
-                      <span>{index + 1}. {option}</span>
-                      {isCompleted && isCorrect && <CheckCircle2 className="w-5 h-5 text-green-500" />}
-                      {isCompleted && isSelected && !isCorrect && <XCircle className="w-5 h-5 text-rose-500" />}
-                    </button>
-                  );
-                })}
-              </div>
-
-              {!(userActivity || isSubmitted) ? (
-                <Button 
-                  onClick={handleQuizSubmit}
-                  disabled={selectedOption === null || isActivityLoading}
-                  className="w-full h-14 rounded-2xl bg-purple-600 hover:bg-purple-700 font-black text-lg shadow-lg shadow-purple-100"
-                >
-                  {isActivityLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : "정답 확인하고 10D 받기"}
-                </Button>
-              ) : (
-                <div className="bg-amber-50 p-5 rounded-2xl border border-amber-100 space-y-2 animate-in fade-in slide-in-from-bottom-4">
-                  <div className="flex items-center gap-2">
-                    <HelpCircle className="w-4 h-4 text-amber-600" />
-                    <p className="text-xs font-black text-amber-700 uppercase tracking-wider">선생님의 해설</p>
-                  </div>
-                  <p className="text-[13px] font-bold text-amber-900 leading-relaxed">
-                    {currentQuiz.explanation}
-                  </p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+    <div className="px-6 py-8 space-y-8">
+      <div className="space-y-4">
+        <div className="flex items-center gap-2 px-1">
+          <Zap className="w-5 h-5 text-yellow-500 fill-yellow-500" />
+          <h2 className="text-xl font-black text-gray-800 italic">오늘의 데일리 퀴즈</h2>
         </div>
 
-        <div className="space-y-4 pb-10">
-          <div className="flex items-center gap-2 px-1">
-            <Trophy className="w-5 h-5 text-orange-500" />
-            <h2 className="text-xl font-black text-gray-800 italic">진행 중인 이벤트</h2>
-          </div>
-          
-          <Card className="border-none shadow-xl rounded-[2.5rem] bg-gradient-to-br from-blue-600 to-indigo-700 p-8 text-white overflow-hidden relative">
-            <Sparkles className="absolute -right-4 -top-4 w-24 h-24 opacity-20 animate-pulse" />
-            <div className="relative z-10 space-y-6">
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <Badge className="bg-white/20 hover:bg-white/30 text-white border-none font-bold">연속 묵상 보너스</Badge>
-                  {streakInfo.count > 0 && (
-                    <span className="text-xs font-black text-blue-200">현재 {streakInfo.count}일째! 🔥</span>
-                  )}
-                </div>
-                <h3 className="text-2xl font-black italic tracking-tight leading-tight">7일 연속 묵상 챌린지!</h3>
-                <p className="text-[13px] font-bold text-blue-100 leading-relaxed">
-                  일주일 동안 하루도 빠짐없이 묵상을 완료하면<br/>특별 보너스 50달란트를 드려요!
-                </p>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <Button 
-                  onClick={handleClaimStreakReward}
-                  disabled={!streakInfo.isEligible || isClaiming}
-                  className={cn(
-                    "flex-1 h-14 rounded-2xl font-black text-lg shadow-lg transition-all",
-                    streakInfo.isEligible 
-                      ? "bg-yellow-400 hover:bg-yellow-500 text-yellow-900 shadow-yellow-900/20" 
-                      : "bg-white/10 text-white/40 cursor-not-allowed border border-white/10"
-                  )}
-                >
-                  {isClaiming ? <Loader2 className="w-5 h-5 animate-spin" /> : (
-                    <>
-                      <Gift className="w-5 h-5 mr-2" />
-                      {userProfile?.lastStreakClaimedAt === todayId ? "오늘 완료!" : "보너스 50D 받기"}
-                    </>
-                  )}
-                </Button>
-              </div>
-              
-              {/* 진행 상황 표시 바 */}
-              <div className="space-y-1.5">
-                <div className="flex justify-between text-[10px] font-black uppercase tracking-wider text-blue-200">
-                  <span>Progress</span>
-                  <span>{Math.min(streakInfo.count, 7)} / 7 Days</span>
-                </div>
-                <div className="h-2 w-full bg-white/10 rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-yellow-400 transition-all duration-1000" 
-                    style={{ width: `${(Math.min(streakInfo.count, 7) / 7) * 100}%` }}
-                  />
-                </div>
-              </div>
+        <Card className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden ring-1 ring-gray-100">
+          <CardContent className="p-8 space-y-6">
+            <div className="bg-purple-50 p-4 rounded-2xl border border-purple-100 relative">
+              <Sparkles className="absolute -top-2 -right-2 w-6 h-6 text-purple-300 animate-pulse" />
+              <p className="text-lg font-black text-purple-900 leading-tight">
+                {currentQuiz.question}
+              </p>
             </div>
-          </Card>
-        </div>
+
+            <div className="space-y-3">
+              {currentQuiz.options.map((option: string, index: number) => {
+                const isCompleted = !!userActivity || isSubmitted;
+                const isCorrect = index === currentQuiz.correctIndex;
+                const isSelected = selectedOption === index || userActivity?.selectedOption === index;
+                
+                let variantClass = "bg-gray-50 border-gray-100 text-gray-700";
+                if (isSelected && !isCompleted) variantClass = "bg-purple-100 border-purple-300 text-purple-700 ring-2 ring-purple-200";
+                if (isCompleted && isCorrect) variantClass = "bg-green-100 border-green-300 text-green-700 ring-2 ring-green-200";
+                if (isCompleted && isSelected && !isCorrect) variantClass = "bg-rose-100 border-rose-300 text-rose-700";
+
+                return (
+                  <button
+                    key={index}
+                    disabled={isCompleted}
+                    onClick={() => setSelectedOption(index)}
+                    className={cn(
+                      "w-full p-4 rounded-2xl border-2 text-left font-bold text-sm transition-all duration-200 flex justify-between items-center group",
+                      variantClass
+                    )}
+                  >
+                    <span>{index + 1}. {option}</span>
+                    {isCompleted && isCorrect && <CheckCircle2 className="w-5 h-5 text-green-500" />}
+                    {isCompleted && isSelected && !isCorrect && <XCircle className="w-5 h-5 text-rose-500" />}
+                  </button>
+                );
+              })}
+            </div>
+
+            {!(userActivity || isSubmitted) ? (
+              <Button 
+                onClick={handleQuizSubmit}
+                disabled={selectedOption === null || isActivityLoading}
+                className="w-full h-14 rounded-2xl bg-purple-600 hover:bg-purple-700 font-black text-lg shadow-lg shadow-purple-100"
+              >
+                {isActivityLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : "정답 확인하고 10D 받기"}
+              </Button>
+            ) : (
+              <div className="bg-amber-50 p-5 rounded-2xl border border-amber-100 space-y-2 animate-in fade-in slide-in-from-bottom-4">
+                <div className="flex items-center gap-2">
+                  <HelpCircle className="w-4 h-4 text-amber-600" />
+                  <p className="text-xs font-black text-amber-700 uppercase tracking-wider">선생님의 해설</p>
+                </div>
+                <p className="text-[13px] font-bold text-amber-900 leading-relaxed">
+                  {currentQuiz.explanation}
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
 
-      <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white/95 backdrop-blur-md border-t-2 border-blue-100 px-6 py-4 flex justify-between items-center rounded-t-[2.5rem] z-50 shadow-[0_-10px_30px_rgba(0,0,0,0.1)]">
-        <Link href="/dashboard" className="flex flex-col items-center gap-1 group text-gray-400">
-          <BookOpen className="w-6 h-6" />
-          <span className="text-[11px] font-bold">QT</span>
-        </Link>
-        <Link href="/dashboard/activity" className="flex flex-col items-center gap-1 group">
-          <Zap className="w-6 h-6 text-[#C026D3] fill-[#C026D3]" />
-          <span className="text-[11px] font-black text-[#C026D3]">활동</span>
-        </Link>
-        <Link href="/dashboard/ranking" className="flex flex-col items-center gap-1 group text-gray-400">
-          <Trophy className="w-6 h-6" />
-          <span className="text-[11px] font-bold">랭킹</span>
-        </Link>
-        <Link href="/dashboard/quiz" className="flex flex-col items-center gap-1 group text-gray-400">
-          <ShoppingBag className="w-6 h-6" />
-          <span className="text-[11px] font-bold">상점</span>
-        </Link>
-        <Link href="/dashboard/my" className="flex flex-col items-center gap-1 group text-gray-400">
-          <UserIcon className="w-6 h-6" />
-          <span className="text-[11px] font-bold">MY</span>
-        </Link>
-      </nav>
+      <div className="space-y-4 pb-10">
+        <div className="flex items-center gap-2 px-1">
+          <Trophy className="w-5 h-5 text-orange-500" />
+          <h2 className="text-xl font-black text-gray-800 italic">진행 중인 이벤트</h2>
+        </div>
+        
+        <Card className="border-none shadow-xl rounded-[2.5rem] bg-gradient-to-br from-blue-600 to-indigo-700 p-8 text-white overflow-hidden relative">
+          <Sparkles className="absolute -right-4 -top-4 w-24 h-24 opacity-20 animate-pulse" />
+          <div className="relative z-10 space-y-6">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Badge className="bg-white/20 hover:bg-white/30 text-white border-none font-bold">연속 묵상 보너스</Badge>
+                {streakInfo.count > 0 && (
+                  <span className="text-xs font-black text-blue-200">현재 {streakInfo.count}일째! 🔥</span>
+                )}
+              </div>
+              <h3 className="text-2xl font-black italic tracking-tight leading-tight">7일 연속 묵상 챌린지!</h3>
+              <p className="text-[13px] font-bold text-blue-100 leading-relaxed">
+                일주일 동안 하루도 빠짐없이 묵상을 완료하면<br/>특별 보너스 50달란트를 드려요!
+              </p>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <Button 
+                onClick={handleClaimStreakReward}
+                disabled={!streakInfo.isEligible || isClaiming}
+                className={cn(
+                  "flex-1 h-14 rounded-2xl font-black text-lg shadow-lg transition-all",
+                  streakInfo.isEligible 
+                    ? "bg-yellow-400 hover:bg-yellow-500 text-yellow-900 shadow-yellow-900/20" 
+                    : "bg-white/10 text-white/40 cursor-not-allowed border border-white/10"
+                )}
+              >
+                {isClaiming ? <Loader2 className="w-5 h-5 animate-spin" /> : (
+                  <>
+                    <Gift className="w-5 h-5 mr-2" />
+                    {userProfile?.lastStreakClaimedAt === todayId ? "오늘 완료!" : "보너스 50D 받기"}
+                  </>
+                )}
+              </Button>
+            </div>
+            
+            <div className="space-y-1.5">
+              <div className="flex justify-between text-[10px] font-black uppercase tracking-wider text-blue-200">
+                <span>Progress</span>
+                <span>{Math.min(streakInfo.count, 7)} / 7 Days</span>
+              </div>
+              <div className="h-2 w-full bg-white/10 rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-yellow-400 transition-all duration-1000" 
+                  style={{ width: `${(Math.min(streakInfo.count, 7) / 7) * 100}%` }}
+                />
+              </div>
+            </div>
+          </div>
+        </Card>
+      </div>
     </div>
   );
 }

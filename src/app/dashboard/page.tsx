@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -5,21 +6,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { 
-  BookOpen, 
-  Star, 
-  Trophy, 
-  ShoppingBag, 
-  User, 
   BookMarked,
   Sparkles,
   Loader2,
   CheckCircle2,
   Calendar,
-  Heart,
-  HelpCircle,
-  Zap
+  HelpCircle
 } from "lucide-react";
-import Link from "next/link";
 import { useUser, useFirestore, useDoc, updateDocumentNonBlocking, setDocumentNonBlocking, useMemoFirebase } from "@/firebase";
 import { doc } from "firebase/firestore";
 import { generateMeditation } from "@/ai/flows/generate-meditation";
@@ -164,190 +157,152 @@ export default function DashboardPage() {
   }).format(new Date());
 
   return (
-    <div className="max-w-md mx-auto bg-[#F0F7FF] min-h-screen pb-24 shadow-2xl overflow-hidden relative border-x border-blue-200 font-body">
-      <header className="px-6 pt-8 pb-4 flex justify-between items-start bg-white/90 backdrop-blur-md sticky top-0 z-40 border-b-2 border-blue-100 shadow-sm">
-        <div className="space-y-1">
-          <h1 className="text-3xl font-black text-[#C026D3] tracking-tight italic">예본TeenQT</h1>
-          <p className="text-gray-500 text-xs font-bold flex items-center gap-1">
-            <Heart className="w-3 h-3 text-pink-400 fill-pink-400" /> 반가워요, {user?.displayName || "친구"}님!
-          </p>
-        </div>
-        <div className="bg-[#FEF9C3] px-4 py-2 rounded-full flex items-center gap-2 shadow-sm border-2 border-yellow-300">
-          <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
-          <span className="text-sm font-black text-yellow-700 tracking-tight">{(userProfile?.points || 0).toLocaleString()} D</span>
-        </div>
-      </header>
+    <div className="px-5 space-y-6 pt-6">
+      <Card className="border-2 border-blue-300 bg-white rounded-[2.5rem] overflow-hidden shadow-md">
+        <CardContent className="p-8 space-y-3">
+          <div className="flex items-center gap-2 text-[#6366F1] mb-1">
+            <Calendar className="w-4 h-4" />
+            <p className="font-bold text-xs uppercase tracking-wider">{todayStr}</p>
+          </div>
+          <h2 className="text-2xl font-black text-[#1E1B4B] tracking-tight leading-tight">아침마다 새로운 은혜</h2>
+          <div className="flex items-center gap-2 text-[#6366F1]">
+            <BookMarked className="w-4 h-4" />
+            <span className="font-black text-sm">{currentVerse.ref}</span>
+          </div>
+        </CardContent>
+      </Card>
 
-      <div className="px-5 space-y-6 pt-6 pb-10">
-        <Card className="border-2 border-blue-300 bg-white rounded-[2.5rem] overflow-hidden shadow-md">
-          <CardContent className="p-8 space-y-3">
-            <div className="flex items-center gap-2 text-[#6366F1] mb-1">
-              <Calendar className="w-4 h-4" />
-              <p className="font-bold text-xs uppercase tracking-wider">{todayStr}</p>
-            </div>
-            <h2 className="text-2xl font-black text-[#1E1B4B] tracking-tight leading-tight">아침마다 새로운 은혜</h2>
-            <div className="flex items-center gap-2 text-[#6366F1]">
-              <BookMarked className="w-4 h-4" />
-              <span className="font-black text-sm">{currentVerse.ref}</span>
-            </div>
+      <Card className="border-2 border-sky-300 bg-[#F0F9FF] rounded-[2.5rem] shadow-md">
+        <CardContent className="p-8 text-center italic text-[#0369A1] font-bold text-lg leading-relaxed">
+          "{currentVerse.text}"
+        </CardContent>
+      </Card>
+
+      <div className="space-y-3">
+        <div className="flex items-center gap-2 px-1">
+          <div className="w-1.5 h-6 bg-[#EC4899] rounded-full" />
+          <h3 className="font-black text-lg text-gray-800 flex items-center gap-2 italic">
+            말씀해설 <Sparkles className="w-4 h-4 text-[#22C3C3] animate-pulse" />
+          </h3>
+        </div>
+        <Card className="border-2 border-pink-200 bg-[#FFF1F2] rounded-[2.5rem] shadow-md overflow-hidden">
+          <CardContent className="p-7 text-gray-700 font-medium leading-relaxed text-[15px]">
+            {!displayCommentary && (isGenerating || isGlobalLoading) ? (
+              <div className="flex flex-col items-center justify-center py-6 gap-3 text-muted-foreground animate-pulse">
+                <Loader2 className="w-8 h-8 animate-spin text-pink-400" /> 
+                <span className="font-bold text-sm text-pink-400">말씀을 힙하게 해석하는 중...</span>
+              </div>
+            ) : (
+              <div className="whitespace-pre-wrap leading-[1.6]">
+                {displayCommentary || "오늘의 말씀을 통해 하나님의 사랑을 느껴보세요!"}
+              </div>
+            )}
           </CardContent>
         </Card>
-
-        <Card className="border-2 border-sky-300 bg-[#F0F9FF] rounded-[2.5rem] shadow-md">
-          <CardContent className="p-8 text-center italic text-[#0369A1] font-bold text-lg leading-relaxed">
-            "{currentVerse.text}"
-          </CardContent>
-        </Card>
-
-        <div className="space-y-3">
-          <div className="flex items-center gap-2 px-1">
-            <div className="w-1.5 h-6 bg-[#EC4899] rounded-full" />
-            <h3 className="font-black text-lg text-gray-800 flex items-center gap-2 italic">
-              말씀해설 <Sparkles className="w-4 h-4 text-[#22C3C3] animate-pulse" />
-            </h3>
-          </div>
-          <Card className="border-2 border-pink-200 bg-[#FFF1F2] rounded-[2.5rem] shadow-md overflow-hidden">
-            <CardContent className="p-7 text-gray-700 font-medium leading-relaxed text-[15px]">
-              {!displayCommentary && (isGenerating || isGlobalLoading) ? (
-                <div className="flex flex-col items-center justify-center py-6 gap-3 text-muted-foreground animate-pulse">
-                  <Loader2 className="w-8 h-8 animate-spin text-pink-400" /> 
-                  <span className="font-bold text-sm text-pink-400">말씀을 힙하게 해석하는 중...</span>
-                </div>
-              ) : (
-                <div className="whitespace-pre-wrap leading-[1.6]">
-                  {displayCommentary || "오늘의 말씀을 통해 하나님의 사랑을 느껴보세요!"}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-
-        {todayUserMeditation ? (
-          <div className="bg-green-50 border-2 border-green-300 rounded-[2.5rem] p-10 text-center space-y-4 animate-in fade-in zoom-in duration-500 shadow-lg">
-            <div className="bg-white w-20 h-20 rounded-full flex items-center justify-center mx-auto shadow-md border-4 border-green-100">
-              <CheckCircle2 className="w-12 h-12 text-green-500" />
-            </div>
-            <div className="space-y-2">
-              <p className="text-xl font-black text-green-700">오늘의 묵상 완료! 🎉</p>
-              <p className="text-sm font-medium text-green-600 leading-relaxed">
-                참 잘했어요! 50달란트가 적립되었습니다.<br/>내일 아침 새로운 말씀으로 또 만나요.
-              </p>
-            </div>
-          </div>
-        ) : (
-          <div className="space-y-8">
-            <div className="space-y-3">
-              <div className="flex items-center justify-between px-1">
-                <div className="flex items-center gap-2">
-                  <div className="w-1.5 h-6 bg-[#F59E0B] rounded-full" />
-                  <h3 className="font-black text-lg text-gray-800 flex items-center gap-2 italic">
-                    말씀묵상 <HelpCircle className="w-4 h-4 text-[#F59E0B]" />
-                  </h3>
-                </div>
-              </div>
-              <Card className="border-2 border-amber-200 bg-[#FFFBEB] rounded-[2.5rem] shadow-md overflow-hidden">
-                <CardContent className="p-7 space-y-6">
-                  <div className="space-y-3">
-                    <p className="text-[#92400E] font-black text-[15px] leading-snug px-1">
-                      {!displayQ1 && (isGenerating || isGlobalLoading) ? "질문을 생각 중..." : `Q1. ${displayQ1 || "말씀을 통해 느낀 점을 적어보세요."}`}
-                    </p>
-                    <div className="relative">
-                      <div className="absolute top-3 right-3 z-10">
-                        <CharCount count={reflection.length} target={20} />
-                      </div>
-                      <Textarea 
-                        placeholder="여기에 솔직한 마음을 적어주세요..."
-                        value={reflection}
-                        onChange={(e) => setReflection(e.target.value)}
-                        className="bg-white border-2 border-amber-100 rounded-2xl min-h-[140px] p-4 pt-10 text-sm focus-visible:ring-yellow-400 focus-visible:border-yellow-400 placeholder:text-gray-300 resize-none shadow-inner"
-                      />
-                    </div>
-                  </div>
-
-                  <Separator className="bg-amber-100" />
-
-                  <div className="space-y-3">
-                    <p className="text-[#92400E] font-black text-[15px] leading-snug px-1">
-                      {!displayQ2 && (isGenerating || isGlobalLoading) ? "다짐을 생각 중..." : `Q2. ${displayQ2 || "오늘 하루 무엇을 실천하고 싶나요?"}`}
-                    </p>
-                    <div className="relative">
-                      <div className="absolute top-3 right-3 z-10">
-                        <CharCount count={resolution.length} target={20} />
-                      </div>
-                      <Textarea 
-                        placeholder="오늘 하루 꼭 지킬 한 가지를 적어봐요!"
-                        value={resolution}
-                        onChange={(e) => setResolution(e.target.value)}
-                        className="bg-white border-2 border-amber-100 rounded-2xl min-h-[140px] p-4 pt-10 text-sm focus-visible:ring-yellow-400 focus-visible:border-yellow-400 placeholder:text-gray-300 resize-none shadow-inner"
-                      />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            <div className="space-y-3">
-              <div className="flex items-center justify-between px-1">
-                <div className="flex items-center gap-2">
-                  <div className="w-1.5 h-6 bg-[#8B5CF6] rounded-full" />
-                  <h3 className="font-black text-lg text-gray-800 flex items-center gap-2 italic">
-                    🙏 오늘의 기도
-                  </h3>
-                </div>
-              </div>
-              <Card className="border-2 border-violet-200 bg-[#F5F3FF] rounded-[2.5rem] shadow-md overflow-hidden">
-                <CardContent className="p-7 relative">
-                  <div className="absolute top-3 right-3 z-10">
-                    <CharCount count={prayer.length} target={10} />
-                  </div>
-                  <Textarea 
-                    placeholder="하나님께 드리는 짧은 기도문을 적어보세요..."
-                    value={prayer}
-                    onChange={(e) => setPrayer(e.target.value)}
-                    className="bg-white border-2 border-violet-100 rounded-2xl min-h-[140px] p-4 pt-10 text-sm focus-visible:ring-violet-400 focus-visible:border-violet-400 placeholder:text-gray-300 resize-none shadow-inner"
-                  />
-                </CardContent>
-              </Card>
-            </div>
-
-            <Button 
-              onClick={handleComplete}
-              disabled={isGenerating || isGlobalLoading}
-              className="w-full h-16 rounded-[1.5rem] bg-gradient-to-r from-[#A855F7] to-[#EC4899] font-black text-lg shadow-xl hover:scale-[1.02] active:scale-95 transition-all mb-4"
-            >
-              {(!displayCommentary && (isGenerating || isGlobalLoading)) ? (
-                <Loader2 className="w-5 h-5 animate-spin mr-2" />
-              ) : (
-                <CheckCircle2 className="w-5 h-5 mr-2" />
-              )}
-              완료하고 50달란트 받기
-            </Button>
-          </div>
-        )}
       </div>
 
-      <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white/95 backdrop-blur-md border-t-2 border-blue-100 px-6 py-4 flex justify-between items-center rounded-t-[2.5rem] z-50 shadow-[0_-10px_30px_rgba(0,0,0,0.1)]">
-        <Link href="/dashboard" className="flex flex-col items-center gap-1 group">
-          <BookOpen className="w-6 h-6 text-[#C026D3]" />
-          <span className="text-[11px] font-black text-[#C026D3]">QT</span>
-        </Link>
-        <Link href="/dashboard/activity" className="flex flex-col items-center gap-1 group text-gray-400">
-          <Zap className="w-6 h-6" />
-          <span className="text-[11px] font-bold">활동</span>
-        </Link>
-        <Link href="/dashboard/ranking" className="flex flex-col items-center gap-1 group text-gray-400 hover:text-[#C026D3] transition-colors">
-          <Trophy className="w-6 h-6" />
-          <span className="text-[11px] font-bold">랭킹</span>
-        </Link>
-        <Link href="/dashboard/quiz" className="flex flex-col items-center gap-1 group text-gray-400 hover:text-[#C026D3] transition-colors">
-          <ShoppingBag className="w-6 h-6" />
-          <span className="text-[11px] font-bold">상점</span>
-        </Link>
-        <Link href="/dashboard/my" className="flex flex-col items-center gap-1 group text-gray-400 hover:text-[#C026D3] transition-colors">
-          <User className="w-6 h-6" />
-          <span className="text-[11px] font-bold">MY</span>
-        </Link>
-      </nav>
+      {todayUserMeditation ? (
+        <div className="bg-green-50 border-2 border-green-300 rounded-[2.5rem] p-10 text-center space-y-4 animate-in fade-in zoom-in duration-500 shadow-lg">
+          <div className="bg-white w-20 h-20 rounded-full flex items-center justify-center mx-auto shadow-md border-4 border-green-100">
+            <CheckCircle2 className="w-12 h-12 text-green-500" />
+          </div>
+          <div className="space-y-2">
+            <p className="text-xl font-black text-green-700">오늘의 묵상 완료! 🎉</p>
+            <p className="text-sm font-medium text-green-600 leading-relaxed">
+              참 잘했어요! 50달란트가 적립되었습니다.<br/>내일 아침 새로운 말씀으로 또 만나요.
+            </p>
+          </div>
+        </div>
+      ) : (
+        <div className="space-y-8 pb-10">
+          <div className="space-y-3">
+            <div className="flex items-center justify-between px-1">
+              <div className="flex items-center gap-2">
+                <div className="w-1.5 h-6 bg-[#F59E0B] rounded-full" />
+                <h3 className="font-black text-lg text-gray-800 flex items-center gap-2 italic">
+                  말씀묵상 <HelpCircle className="w-4 h-4 text-[#F59E0B]" />
+                </h3>
+              </div>
+            </div>
+            <Card className="border-2 border-amber-200 bg-[#FFFBEB] rounded-[2.5rem] shadow-md overflow-hidden">
+              <CardContent className="p-7 space-y-6">
+                <div className="space-y-3">
+                  <p className="text-[#92400E] font-black text-[15px] leading-snug px-1">
+                    {!displayQ1 && (isGenerating || isGlobalLoading) ? "질문을 생각 중..." : `Q1. ${displayQ1 || "말씀을 통해 느낀 점을 적어보세요."}`}
+                  </p>
+                  <div className="relative">
+                    <div className="absolute top-3 right-3 z-10">
+                      <CharCount count={reflection.length} target={20} />
+                    </div>
+                    <Textarea 
+                      placeholder="여기에 솔직한 마음을 적어주세요..."
+                      value={reflection}
+                      onChange={(e) => setReflection(e.target.value)}
+                      className="bg-white border-2 border-amber-100 rounded-2xl min-h-[140px] p-4 pt-10 text-sm focus-visible:ring-yellow-400 focus-visible:border-yellow-400 placeholder:text-gray-300 resize-none shadow-inner"
+                    />
+                  </div>
+                </div>
+
+                <Separator className="bg-amber-100" />
+
+                <div className="space-y-3">
+                  <p className="text-[#92400E] font-black text-[15px] leading-snug px-1">
+                    {!displayQ2 && (isGenerating || isGlobalLoading) ? "다짐을 생각 중..." : `Q2. ${displayQ2 || "오늘 하루 무엇을 실천하고 싶나요?"}`}
+                  </p>
+                  <div className="relative">
+                    <div className="absolute top-3 right-3 z-10">
+                      <CharCount count={resolution.length} target={20} />
+                    </div>
+                    <Textarea 
+                      placeholder="오늘 하루 꼭 지킬 한 가지를 적어봐요!"
+                      value={resolution}
+                      onChange={(e) => setResolution(e.target.value)}
+                      className="bg-white border-2 border-amber-100 rounded-2xl min-h-[140px] p-4 pt-10 text-sm focus-visible:ring-yellow-400 focus-visible:border-yellow-400 placeholder:text-gray-300 resize-none shadow-inner"
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="space-y-3">
+            <div className="flex items-center justify-between px-1">
+              <div className="flex items-center gap-2">
+                <div className="w-1.5 h-6 bg-[#8B5CF6] rounded-full" />
+                <h3 className="font-black text-lg text-gray-800 flex items-center gap-2 italic">
+                  🙏 오늘의 기도
+                </h3>
+              </div>
+            </div>
+            <Card className="border-2 border-violet-200 bg-[#F5F3FF] rounded-[2.5rem] shadow-md overflow-hidden">
+              <CardContent className="p-7 relative">
+                <div className="absolute top-3 right-3 z-10">
+                  <CharCount count={prayer.length} target={10} />
+                </div>
+                <Textarea 
+                  placeholder="하나님께 드리는 짧은 기도문을 적어보세요..."
+                  value={prayer}
+                  onChange={(e) => setPrayer(e.target.value)}
+                  className="bg-white border-2 border-violet-100 rounded-2xl min-h-[140px] p-4 pt-10 text-sm focus-visible:ring-violet-400 focus-visible:border-violet-400 placeholder:text-gray-300 resize-none shadow-inner"
+                />
+              </CardContent>
+            </Card>
+          </div>
+
+          <Button 
+            onClick={handleComplete}
+            disabled={isGenerating || isGlobalLoading}
+            className="w-full h-16 rounded-[1.5rem] bg-gradient-to-r from-[#A855F7] to-[#EC4899] font-black text-lg shadow-xl hover:scale-[1.02] active:scale-95 transition-all mb-4"
+          >
+            {(!displayCommentary && (isGenerating || isGlobalLoading)) ? (
+              <Loader2 className="w-5 h-5 animate-spin mr-2" />
+            ) : (
+              <CheckCircle2 className="w-5 h-5 mr-2" />
+            )}
+            완료하고 50달란트 받기
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

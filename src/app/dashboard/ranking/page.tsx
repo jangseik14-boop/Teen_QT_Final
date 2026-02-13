@@ -1,33 +1,22 @@
+
 "use client";
 
 import React, { useMemo } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { 
-  Trophy, 
   Crown, 
   Star, 
-  Heart,
-  ChevronRight,
-  Sparkles,
-  BookOpen,
-  ShoppingBag,
-  User,
-  Calendar,
-  Zap
+  Sparkles
 } from "lucide-react";
-import { useFirestore, useCollection, useMemoFirebase, useUser, useDoc } from "@/firebase";
-import { collection, query, orderBy, limit, doc } from "firebase/firestore";
+import { useFirestore, useCollection, useMemoFirebase, useUser } from "@/firebase";
+import { collection, query } from "firebase/firestore";
 import { Badge } from "@/components/ui/badge";
-import Link from "next/link";
 import { cn } from "@/lib/utils";
 
 export default function RankingPage() {
   const { user } = useUser();
   const firestore = useFirestore();
-
-  const userRef = useMemoFirebase(() => user ? doc(firestore, "users", user.uid) : null, [user, firestore]);
-  const { data: userProfile } = useDoc(userRef);
 
   const rankingQuery = useMemoFirebase(() => query(
     collection(firestore, "users")
@@ -50,82 +39,42 @@ export default function RankingPage() {
   };
 
   return (
-    <div className="max-w-md mx-auto bg-[#F8FAFC] min-h-screen pb-24 shadow-2xl overflow-hidden relative border-x border-gray-200 font-body">
-      <header className="px-6 pt-8 pb-4 flex justify-between items-start bg-white/90 backdrop-blur-md sticky top-0 z-40 border-b border-gray-100 shadow-sm">
-        <div className="space-y-1">
-          <h1 className="text-2xl font-black text-[#C026D3] tracking-tight italic">예본TeenQT</h1>
-          <p className="text-gray-400 text-[13px] font-bold">환영합니다, {userProfile?.displayName || "친구"}님!</p>
-        </div>
-        <div className="bg-[#FEF9C3] px-4 py-2 rounded-full flex items-center gap-2 shadow-sm border border-yellow-200">
-          <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
-          <span className="text-sm font-black text-yellow-700 tracking-tight">
-            {(userProfile?.points || 0).toLocaleString()} D
-          </span>
-        </div>
-      </header>
-
-      <div className="px-6 py-10 space-y-8 flex flex-col items-center">
-        <div className="text-center space-y-2">
-          <Badge className="bg-yellow-100 text-yellow-700 border-none font-black px-4 py-1 rounded-full mb-2">명예의 전당</Badge>
-          <h2 className="text-3xl font-black text-[#1E1B4B] tracking-tight italic">달란트 랭킹 TOP 5</h2>
-          <p className="text-gray-400 font-bold text-sm">
-            달란트를 가장 많이 모은 상위 5명입니다!
-          </p>
-        </div>
-
-        <div className="w-full space-y-5">
-          {isLoading ? (
-            <div className="flex flex-col items-center py-20 gap-4">
-              <Sparkles className="w-10 h-10 text-purple-200 animate-pulse" />
-              <p className="text-gray-300 font-black italic">랭킹 산정 중...</p>
-            </div>
-          ) : (
-            topUsers?.map((u, index) => (
-              <RankingItem 
-                key={u.id} 
-                rank={index + 1} 
-                user={u} 
-                isMe={u.id === user?.uid} 
-                roleLabel={roleLabels[u.role] || "멤버"}
-              />
-            ))
-          )}
-        </div>
-
-        <p className="text-[11px] text-gray-300 font-bold text-center pt-4">
-          누적 달란트는 매년 1월 1일에 초기화됩니다. 🚀
+    <div className="px-6 py-10 space-y-8 flex flex-col items-center">
+      <div className="text-center space-y-2">
+        <Badge className="bg-yellow-100 text-yellow-700 border-none font-black px-4 py-1 rounded-full mb-2">명예의 전당</Badge>
+        <h2 className="text-3xl font-black text-[#1E1B4B] tracking-tight italic">달란트 랭킹 TOP 5</h2>
+        <p className="text-gray-400 font-bold text-sm">
+          달란트를 가장 많이 모은 상위 5명입니다!
         </p>
       </div>
 
-      <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white/95 backdrop-blur-md border-t-2 border-blue-100 px-6 py-4 flex justify-between items-center rounded-t-[2.5rem] z-50 shadow-[0_-10px_30px_rgba(0,0,0,0.1)]">
-        <Link href="/dashboard" className="flex flex-col items-center gap-1 group text-gray-400">
-          <BookOpen className="w-6 h-6" />
-          <span className="text-[11px] font-bold">QT</span>
-        </Link>
-        <Link href="/dashboard/activity" className="flex flex-col items-center gap-1 group text-gray-400">
-          <Zap className="w-6 h-6" />
-          <span className="text-[11px] font-bold">활동</span>
-        </Link>
-        <Link href="/dashboard/ranking" className="flex flex-col items-center gap-1 group">
-          <Trophy className="w-6 h-6 text-[#C026D3]" />
-          <span className="text-[11px] font-black text-[#C026D3]">랭킹</span>
-        </Link>
-        <Link href="/dashboard/quiz" className="flex flex-col items-center gap-1 group text-gray-400">
-          <ShoppingBag className="w-6 h-6" />
-          <span className="text-[11px] font-bold">상점</span>
-        </Link>
-        <Link href="/dashboard/my" className="flex flex-col items-center gap-1 group text-gray-400">
-          <User className="w-6 h-6" />
-          <span className="text-[11px] font-bold">MY</span>
-        </Link>
-      </nav>
+      <div className="w-full space-y-5">
+        {isLoading ? (
+          <div className="flex flex-col items-center py-20 gap-4">
+            <Sparkles className="w-10 h-10 text-purple-200 animate-pulse" />
+            <p className="text-gray-300 font-black italic">랭킹 산정 중...</p>
+          </div>
+        ) : (
+          topUsers?.map((u, index) => (
+            <RankingItem 
+              key={u.id} 
+              rank={index + 1} 
+              user={u} 
+              isMe={u.id === user?.uid} 
+              roleLabel={roleLabels[u.role] || "멤버"}
+            />
+          ))
+        )}
+      </div>
+
+      <p className="text-[11px] text-gray-300 font-bold text-center pt-4">
+        누적 달란트는 매년 1월 1일에 초기화됩니다. 🚀
+      </p>
     </div>
   );
 }
 
 function RankingItem({ rank, user, isMe, roleLabel }: { rank: number, user: any, isMe: boolean, roleLabel: string }) {
-  const isTop3 = rank <= 3;
-  
   const rankColors: Record<number, string> = {
     1: "bg-gradient-to-tr from-yellow-400 via-yellow-200 to-yellow-600 border-yellow-300 ring-4 ring-yellow-100 shadow-xl shadow-yellow-200",
     2: "bg-gradient-to-tr from-slate-200 via-slate-100 to-slate-400 border-slate-300 ring-4 ring-slate-100 shadow-md shadow-slate-100",
@@ -151,7 +100,7 @@ function RankingItem({ rank, user, isMe, roleLabel }: { rank: number, user: any,
     : rank === 2 
     ? "border-2 border-slate-300 shadow-lg ring-2 ring-slate-100 bg-white" 
     : rank === 3 
-    ? "border-2 border-[#92400E]/30 shadow-md ring-2 ring-orange-100/50 bg-white" 
+    ? "border-2 border-[#92400E] shadow-md ring-2 ring-orange-100/50 bg-white" 
     : "border-2 border-gray-50 shadow-sm bg-white";
 
   return (
@@ -185,7 +134,7 @@ function RankingItem({ rank, user, isMe, roleLabel }: { rank: number, user: any,
                 "w-12 h-12 border-2",
                 rank === 1 ? "w-14 h-14 border-yellow-400 ring-2 ring-yellow-100" : rank === 2 ? "border-slate-300" : rank === 3 ? "border-orange-300" : "border-gray-100"
               )}>
-                <AvatarImage src={`https://picsum.photos/seed/${user.id}/200`} />
+                <AvatarImage src={user.profilePictureUrl || `https://picsum.photos/seed/${user.id}/200`} />
                 <AvatarFallback className="font-black text-lg bg-gray-50">{user.displayName?.[0]}</AvatarFallback>
               </Avatar>
               {rank === 1 && (

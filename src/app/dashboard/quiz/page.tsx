@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState } from 'react';
@@ -14,16 +15,11 @@ import {
   Home,
   Trophy,
   Smartphone,
-  MessageSquare,
-  User,
-  BookOpen,
-  Zap
+  MessageSquare
 } from 'lucide-react';
 import { toast } from "@/hooks/use-toast";
-import { Badge } from "@/components/ui/badge";
 import { useUser, useFirestore, useDoc, useMemoFirebase, updateDocumentNonBlocking, addDocumentNonBlocking } from "@/firebase";
 import { doc, collection } from "firebase/firestore";
-import Link from "next/link";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { 
   AlertDialog, 
@@ -131,114 +127,101 @@ export default function VibeQuizShop() {
   };
 
   return (
-    <div className="max-w-md mx-auto bg-white min-h-screen pb-32 shadow-2xl overflow-hidden relative font-body">
-      <header className="px-6 pt-8 pb-4 flex justify-between items-start bg-white sticky top-0 z-40 border-b border-gray-50">
-        <div className="space-y-1">
-          <h1 className="text-2xl font-black text-[#C026D3] tracking-tight italic">예본TeenQT</h1>
-          <p className="text-gray-400 text-[13px] font-medium">환영합니다, {userProfile?.displayName || "친구"}님!</p>
+    <div className="px-6 space-y-8 pt-6">
+      <div className="bg-gradient-to-br from-[#A855F7] to-[#8B5CF6] rounded-[2rem] p-8 text-white space-y-4 shadow-xl relative overflow-hidden">
+        <ShoppingBag className="absolute -right-4 -bottom-4 w-32 h-32 opacity-10 rotate-12" />
+        <div className="space-y-1 relative z-10">
+          <p className="text-white/80 font-bold text-sm">보유 달란트</p>
+          <div className="flex items-center gap-3">
+            <Star className="w-8 h-8 text-yellow-300 fill-yellow-300" />
+            <h2 className="text-4xl font-black tracking-tighter">{(userProfile?.points || 0).toLocaleString()}</h2>
+          </div>
         </div>
-        <div className="bg-[#FEF9C3] px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-sm border border-yellow-200">
-          <Star className="w-3.5 h-3.5 text-yellow-500 fill-yellow-500" />
-          <span className="text-sm font-black text-yellow-700 tracking-tight">{(userProfile?.points || 0).toLocaleString()} D</span>
+        <div className="pt-2 border-t border-white/20 flex items-center gap-2 relative z-10">
+          <Trophy className="w-3 h-3 text-yellow-200" />
+          <p className="text-xs font-bold text-white/70 uppercase tracking-widest">
+            누적 달란트: <span className="text-white">{(userProfile?.totalPoints || 0).toLocaleString()} D</span>
+          </p>
         </div>
-      </header>
+      </div>
 
-      <div className="px-6 space-y-8 pt-6">
-        <div className="bg-gradient-to-br from-[#A855F7] to-[#8B5CF6] rounded-[2rem] p-8 text-white space-y-4 shadow-xl relative overflow-hidden">
-          <ShoppingBag className="absolute -right-4 -bottom-4 w-32 h-32 opacity-10 rotate-12" />
-          <div className="space-y-1 relative z-10">
-            <p className="text-white/80 font-bold text-sm">보유 달란트</p>
-            <div className="flex items-center gap-3">
-              <Star className="w-8 h-8 text-yellow-300 fill-yellow-300" />
-              <h2 className="text-4xl font-black tracking-tighter">{(userProfile?.points || 0).toLocaleString()}</h2>
+      <div className="space-y-4">
+        <div className="flex items-center gap-2 px-1">
+          <Gift className="w-5 h-5 text-gray-800" />
+          <h3 className="font-black text-lg text-gray-800 italic">일반 상품</h3>
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          {SHOP_ITEMS.map(item => (
+            <Card key={item.id} className="border-2 border-cyan-100 bg-[#F0FDFA] rounded-[2rem] overflow-hidden shadow-none hover:shadow-md transition-shadow">
+              <CardContent className="p-6 flex flex-col items-center text-center space-y-3">
+                <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-sm border border-cyan-50">
+                  {item.icon}
+                </div>
+                <div className="space-y-1">
+                  <p className="text-[11px] font-black text-cyan-500 uppercase tracking-tighter">{item.category}</p>
+                  <h3 className="text-sm font-black text-gray-800 leading-tight break-keep px-1">
+                    {item.name}
+                  </h3>
+                </div>
+                <Button 
+                  onClick={() => handleBuyClick(item)}
+                  disabled={isBuying === item.id}
+                  className="w-full rounded-xl bg-white hover:bg-cyan-50 text-cyan-600 border border-cyan-200 shadow-sm font-black text-xs h-10 transition-all active:scale-95"
+                >
+                  {isBuying === item.id ? "..." : `${item.price.toLocaleString()} D 구매`}
+                </Button>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+
+      <div className="space-y-4">
+        <div className="flex items-center gap-2 px-1">
+          <Star className="w-5 h-5 text-gray-800" />
+          <h3 className="font-black text-lg text-gray-800 italic">특별 상품</h3>
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          {SPECIAL_ITEMS.map(item => (
+            <Card key={item.id} className="border-2 border-blue-50 bg-[#E0F2FE]/30 rounded-[2rem] overflow-hidden shadow-none">
+              <CardContent className="p-6 flex flex-col items-center text-center space-y-3">
+                <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-sm border border-blue-50">
+                  {item.icon}
+                </div>
+                <div className="space-y-1">
+                  <p className="text-[11px] font-black text-blue-400 uppercase tracking-tighter">{item.category}</p>
+                  <h3 className="text-sm font-black text-gray-800 leading-tight break-keep px-1">
+                    {item.name}
+                  </h3>
+                </div>
+                <Button 
+                  onClick={() => handleBuyClick(item)}
+                  disabled={isBuying === item.id}
+                  className="w-full rounded-xl bg-white hover:bg-blue-50 text-blue-600 border border-blue-200 shadow-sm font-black text-xs h-10"
+                >
+                  {isBuying === item.id ? "..." : `${item.price.toLocaleString()} D 구매`}
+                </Button>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+
+      <div className="pb-10">
+        <Card className="border-none bg-rose-50 rounded-[2rem] overflow-hidden">
+          <CardContent className="p-6 flex items-center justify-between gap-4">
+            <div className="space-y-1">
+              <h3 className="font-black text-[15px] text-rose-800">원하는 상품이 없나요?</h3>
+              <p className="text-xs font-medium text-rose-600">전도사님께 새로운 상품을 신청해보세요!</p>
             </div>
-          </div>
-          <div className="pt-2 border-t border-white/20 flex items-center gap-2 relative z-10">
-            <Trophy className="w-3 h-3 text-yellow-200" />
-            <p className="text-xs font-bold text-white/70 uppercase tracking-widest">
-              누적 달란트: <span className="text-white">{(userProfile?.totalPoints || 0).toLocaleString()} D</span>
-            </p>
-          </div>
-        </div>
-
-        <div className="space-y-4">
-          <div className="flex items-center gap-2 px-1">
-            <Gift className="w-5 h-5 text-gray-800" />
-            <h3 className="font-black text-lg text-gray-800 italic">일반 상품</h3>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            {SHOP_ITEMS.map(item => (
-              <Card key={item.id} className="border-2 border-cyan-100 bg-[#F0FDFA] rounded-[2rem] overflow-hidden shadow-none hover:shadow-md transition-shadow">
-                <CardContent className="p-6 flex flex-col items-center text-center space-y-3">
-                  <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-sm border border-cyan-50">
-                    {item.icon}
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-[11px] font-black text-cyan-500 uppercase tracking-tighter">{item.category}</p>
-                    <h3 className="text-sm font-black text-gray-800 leading-tight break-keep px-1">
-                      {item.name}
-                    </h3>
-                  </div>
-                  <Button 
-                    onClick={() => handleBuyClick(item)}
-                    disabled={isBuying === item.id}
-                    className="w-full rounded-xl bg-white hover:bg-cyan-50 text-cyan-600 border border-cyan-200 shadow-sm font-black text-xs h-10 transition-all active:scale-95"
-                  >
-                    {isBuying === item.id ? "..." : `${item.price.toLocaleString()} D 구매`}
-                  </Button>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-
-        <div className="space-y-4">
-          <div className="flex items-center gap-2 px-1">
-            <Star className="w-5 h-5 text-gray-800" />
-            <h3 className="font-black text-lg text-gray-800 italic">특별 상품</h3>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            {SPECIAL_ITEMS.map(item => (
-              <Card key={item.id} className="border-2 border-blue-50 bg-[#E0F2FE]/30 rounded-[2rem] overflow-hidden shadow-none">
-                <CardContent className="p-6 flex flex-col items-center text-center space-y-3">
-                  <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-sm border border-blue-50">
-                    {item.icon}
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-[11px] font-black text-blue-400 uppercase tracking-tighter">{item.category}</p>
-                    <h3 className="text-sm font-black text-gray-800 leading-tight break-keep px-1">
-                      {item.name}
-                    </h3>
-                  </div>
-                  <Button 
-                    onClick={() => handleBuyClick(item)}
-                    disabled={isBuying === item.id}
-                    className="w-full rounded-xl bg-white hover:bg-blue-50 text-blue-600 border border-blue-200 shadow-sm font-black text-xs h-10"
-                  >
-                    {isBuying === item.id ? "..." : `${item.price.toLocaleString()} D 구매`}
-                  </Button>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-
-        <div className="pb-10">
-          <Card className="border-none bg-rose-50 rounded-[2rem] overflow-hidden">
-            <CardContent className="p-6 flex items-center justify-between gap-4">
-              <div className="space-y-1">
-                <h3 className="font-black text-[15px] text-rose-800">원하는 상품이 없나요?</h3>
-                <p className="text-xs font-medium text-rose-600">전도사님께 새로운 상품을 신청해보세요!</p>
-              </div>
-              <Button 
-                onClick={() => setIsRequestDialogOpen(true)}
-                className="bg-rose-500 hover:bg-rose-600 text-white rounded-2xl font-black px-4 shadow-lg shadow-rose-100"
-              >
-                상품 신청
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
+            <Button 
+              onClick={() => setIsRequestDialogOpen(true)}
+              className="bg-rose-500 hover:bg-rose-600 text-white rounded-2xl font-black px-4 shadow-lg shadow-rose-100"
+            >
+              상품 신청
+            </Button>
+          </CardContent>
+        </Card>
       </div>
 
       <AlertDialog open={!!itemToBuy} onOpenChange={(open) => !open && setItemToBuy(null)}>
@@ -296,29 +279,6 @@ export default function VibeQuizShop() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white/95 backdrop-blur-md border-t-2 border-blue-100 px-6 py-4 flex justify-between items-center rounded-t-[2.5rem] z-50 shadow-[0_-10px_30px_rgba(0,0,0,0.1)]">
-        <Link href="/dashboard" className="flex flex-col items-center gap-1 group text-gray-400">
-          <BookOpen className="w-6 h-6" />
-          <span className="text-[11px] font-bold">QT</span>
-        </Link>
-        <Link href="/dashboard/activity" className="flex flex-col items-center gap-1 group text-gray-400">
-          <Zap className="w-6 h-6" />
-          <span className="text-[11px] font-bold">활동</span>
-        </Link>
-        <Link href="/dashboard/ranking" className="flex flex-col items-center gap-1 group text-gray-400">
-          <Trophy className="w-6 h-6" />
-          <span className="text-[11px] font-bold">랭킹</span>
-        </Link>
-        <Link href="/dashboard/quiz" className="flex flex-col items-center gap-1 group">
-          <ShoppingBag className="w-6 h-6 text-[#C026D3]" />
-          <span className="text-[11px] font-black text-[#C026D3]">상점</span>
-        </Link>
-        <Link href="/dashboard/my" className="flex flex-col items-center gap-1 group text-gray-400">
-          <User className="w-6 h-6" />
-          <span className="text-[11px] font-bold">MY</span>
-        </Link>
-      </nav>
     </div>
   );
 }

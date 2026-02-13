@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useRef } from 'react';
@@ -5,27 +6,19 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { 
-  Star, 
   LogOut, 
   Camera, 
   ChevronDown, 
   ChevronUp,
   Gift, 
-  ShoppingBag, 
-  CreditCard,
   ShieldCheck,
   Lock,
   CheckCircle2,
   PackageOpen,
-  User as UserIcon,
-  Loader2,
-  Trophy,
-  Calendar,
-  Zap,
-  BookOpen
+  Loader2
 } from "lucide-react";
 import { useUser, useFirestore, useDoc, useCollection, useMemoFirebase, updateDocumentNonBlocking } from "@/firebase";
-import { doc, collection, query, where, orderBy } from "firebase/firestore";
+import { doc, collection, query, orderBy } from "firebase/firestore";
 import { signOut } from "firebase/auth";
 import { useAuth } from "@/firebase";
 import { useRouter } from "next/navigation";
@@ -33,7 +26,6 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/hooks/use-toast";
-import Link from "next/link";
 
 export default function MyProfilePage() {
   const { user } = useUser();
@@ -176,123 +168,108 @@ export default function MyProfilePage() {
   const canSeeAdminMode = userProfile?.role === 'pastor' || userProfile?.role === 'teacher';
 
   return (
-    <div className="max-w-md mx-auto bg-white min-h-screen pb-24 shadow-2xl overflow-hidden relative font-body">
-      <header className="px-6 pt-8 pb-4 flex justify-between items-start sticky top-0 z-40 bg-white/80 backdrop-blur-md">
-        <div className="space-y-1">
-          <h1 className="text-2xl font-black text-[#C026D3] tracking-tight italic">예본TeenQT</h1>
-          <p className="text-gray-400 text-[13px] font-medium">환영합니다, {userProfile?.displayName || "사용자"}님!</p>
-        </div>
-        <div className="bg-[#FEF9C3] px-4 py-2 rounded-full flex items-center gap-2 shadow-sm border border-yellow-200">
-          <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
-          <span className="text-sm font-black text-yellow-700 tracking-tight">
-            {(userProfile?.points || 0).toLocaleString()} D
-          </span>
-        </div>
-      </header>
-
-      <div className="px-6 space-y-8 pt-4">
-        <div className="flex flex-col items-center space-y-4 pt-4">
-          <div className="relative group cursor-pointer" onClick={handleImageClick}>
-            <div className="w-32 h-32 rounded-full p-1 bg-gradient-to-tr from-pink-400 to-purple-500 shadow-xl overflow-hidden relative">
-              <Avatar className="w-full h-full border-4 border-white">
-                <AvatarImage 
-                  src={userProfile?.profilePictureUrl || `https://picsum.photos/seed/${user?.uid}/200`} 
-                  className="object-cover"
-                />
-                <AvatarFallback className="bg-white text-2xl font-black text-purple-400">
-                  {userProfile?.displayName?.[0]}
-                </AvatarFallback>
-              </Avatar>
-              {isUploading && (
-                <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center rounded-full z-10">
-                  <Loader2 className="w-8 h-8 text-white animate-spin mb-1" />
-                  <span className="text-[10px] text-white font-bold">압축 중...</span>
-                </div>
-              )}
-            </div>
-            <button className="absolute bottom-1 right-1 bg-white p-2 rounded-full shadow-lg border border-gray-100 hover:scale-110 transition-transform">
-              <Camera className="w-4 h-4 text-gray-500" />
-            </button>
-            <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageChange} />
-          </div>
-          
-          <div className="text-center space-y-1">
-            <h2 className="text-2xl font-black text-gray-800 tracking-tight">{userProfile?.displayName || "이름 없음"}</h2>
-            <p className="text-gray-400 font-bold text-sm">{roleLabels[userProfile?.role || ""] || "일반 멤버"}</p>
-            <button onClick={handleLogout} className="flex items-center gap-1 mx-auto text-gray-300 hover:text-gray-500 transition-colors pt-2">
-              <LogOut className="w-4 h-4" />
-              <span className="text-[13px] font-bold tracking-tight">로그아웃</span>
-            </button>
-          </div>
-
-          {canSeeAdminMode && (
-            <button onClick={() => setIsAdminEntryDialogOpen(true)} className="w-full text-left">
-              <div className="w-full flex items-center justify-between p-5 bg-rose-50 border-2 border-rose-100 rounded-[1.5rem] group hover:bg-rose-100 transition-all shadow-sm">
-                <div className="flex items-center gap-3">
-                  <div className="bg-white p-2 rounded-xl shadow-sm">
-                    <ShieldCheck className="w-5 h-5 text-rose-500" />
-                  </div>
-                  <span className="font-black text-rose-600">관리자 모드</span>
-                </div>
-                <ChevronDown className="w-5 h-5 text-rose-300 -rotate-90" />
+    <div className="px-6 space-y-8 pt-4">
+      <div className="flex flex-col items-center space-y-4 pt-4">
+        <div className="relative group cursor-pointer" onClick={handleImageClick}>
+          <div className="w-32 h-32 rounded-full p-1 bg-gradient-to-tr from-pink-400 to-purple-500 shadow-xl overflow-hidden relative">
+            <Avatar className="w-full h-full border-4 border-white">
+              <AvatarImage 
+                src={userProfile?.profilePictureUrl || `https://picsum.photos/seed/${user?.uid}/200`} 
+                className="object-cover"
+              />
+              <AvatarFallback className="bg-white text-2xl font-black text-purple-400">
+                {userProfile?.displayName?.[0]}
+              </AvatarFallback>
+            </Avatar>
+            {isUploading && (
+              <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center rounded-full z-10">
+                <Loader2 className="w-8 h-8 text-white animate-spin mb-1" />
+                <span className="text-[10px] text-white font-bold">압축 중...</span>
               </div>
-            </button>
-          )}
-        </div>
-
-        <div className="space-y-4">
-          <div className="bg-[#FDF4FF] rounded-[2.5rem] p-6 space-y-4 shadow-sm border-2 border-pink-50">
-            <div className="flex justify-between items-center px-2">
-              <h3 className="font-black text-lg text-[#701A75] italic">내 보관함</h3>
-              <Badge className="bg-[#FAE8FF] text-[#C026D3] border-none font-bold">
-                사용 가능 {availableItems.length}개
-              </Badge>
-            </div>
-            <div className="space-y-3 min-h-[100px]">
-              {availableItems.length > 0 ? availableItems.map((item: any) => (
-                <Card key={item.id} className="border-none shadow-sm rounded-3xl overflow-hidden bg-white group hover:scale-[1.01] transition-transform">
-                  <CardContent className="p-4 flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className="bg-pink-50 p-3 rounded-2xl"><Gift className="text-pink-500 w-5 h-5" /></div>
-                      <div>
-                        <p className="font-black text-[15px] text-gray-800">{item.name}</p>
-                        <p className="text-gray-400 text-xs font-bold">교환 가능</p>
-                      </div>
-                    </div>
-                    <Button onClick={() => handleRedeemClick(item)} className="rounded-xl bg-[#FDF4FF] text-[#C026D3] hover:bg-[#FAE8FF] font-black h-9 px-4 text-xs border border-pink-100 shadow-sm">교환하기</Button>
-                  </CardContent>
-                </Card>
-              )) : (
-                <div className="flex flex-col items-center justify-center py-8 opacity-40">
-                  <PackageOpen className="w-10 h-10 mb-2 text-pink-300" />
-                  <p className="text-sm font-bold text-pink-400">보관함이 비어있어요</p>
-                </div>
-              )}
-            </div>
+            )}
           </div>
+          <button className="absolute bottom-1 right-1 bg-white p-2 rounded-full shadow-lg border border-gray-100 hover:scale-110 transition-transform">
+            <Camera className="w-4 h-4 text-gray-500" />
+          </button>
+          <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageChange} />
+        </div>
+        
+        <div className="text-center space-y-1">
+          <h2 className="text-2xl font-black text-gray-800 tracking-tight">{userProfile?.displayName || "이름 없음"}</h2>
+          <p className="text-gray-400 font-bold text-sm">{roleLabels[userProfile?.role || ""] || "일반 멤버"}</p>
+          <button onClick={handleLogout} className="flex items-center gap-1 mx-auto text-gray-300 hover:text-gray-500 transition-colors pt-2">
+            <LogOut className="w-4 h-4" />
+            <span className="text-[13px] font-bold tracking-tight">로그아웃</span>
+          </button>
         </div>
 
-        <div className="space-y-2">
-          <button onClick={() => setShowUsedHistory(!showUsedHistory)} className="w-full flex items-center justify-center gap-2 text-gray-400 font-bold text-sm py-2 hover:text-gray-600 transition-colors">
-            사용 완료 내역 보기 {showUsedHistory ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+        {canSeeAdminMode && (
+          <button onClick={() => setIsAdminEntryDialogOpen(true)} className="w-full text-left">
+            <div className="w-full flex items-center justify-between p-5 bg-rose-50 border-2 border-rose-100 rounded-[1.5rem] group hover:bg-rose-100 transition-all shadow-sm">
+              <div className="flex items-center gap-3">
+                <div className="bg-white p-2 rounded-xl shadow-sm">
+                  <ShieldCheck className="w-5 h-5 text-rose-500" />
+                </div>
+                <span className="font-black text-rose-600">관리자 모드</span>
+              </div>
+              <ChevronDown className="w-5 h-5 text-rose-300 -rotate-90" />
+            </div>
           </button>
-          {showUsedHistory && (
-            <div className="space-y-3 animate-in slide-in-from-top-2 duration-300">
-              {usedItems.length > 0 ? usedItems.map((item: any) => (
-                <div key={item.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-3xl opacity-60">
-                  <div className="flex items-center gap-3">
-                    <CheckCircle2 className="w-5 h-5 text-gray-400" />
+        )}
+      </div>
+
+      <div className="space-y-4">
+        <div className="bg-[#FDF4FF] rounded-[2.5rem] p-6 space-y-4 shadow-sm border-2 border-pink-50">
+          <div className="flex justify-between items-center px-2">
+            <h3 className="font-black text-lg text-[#701A75] italic">내 보관함</h3>
+            <Badge className="bg-[#FAE8FF] text-[#C026D3] border-none font-bold">
+              사용 가능 {availableItems.length}개
+            </Badge>
+          </div>
+          <div className="space-y-3 min-h-[100px]">
+            {availableItems.length > 0 ? availableItems.map((item: any) => (
+              <Card key={item.id} className="border-none shadow-sm rounded-3xl overflow-hidden bg-white group hover:scale-[1.01] transition-transform">
+                <CardContent className="p-4 flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="bg-pink-50 p-3 rounded-2xl"><Gift className="text-pink-500 w-5 h-5" /></div>
                     <div>
-                      <p className="text-sm font-bold text-gray-600 line-through">{item.name}</p>
-                      <p className="text-[10px] text-gray-400">{new Date(item.usedAt).toLocaleDateString()} 사용됨</p>
+                      <p className="font-black text-[15px] text-gray-800">{item.name}</p>
+                      <p className="text-gray-400 text-xs font-bold">교환 가능</p>
                     </div>
                   </div>
-                  <Badge variant="outline" className="text-gray-400 text-[10px]">교환완료</Badge>
-                </div>
-              )) : <p className="text-center py-4 text-xs font-bold text-gray-300">내역이 없습니다.</p>}
-            </div>
-          )}
+                  <Button onClick={() => handleRedeemClick(item)} className="rounded-xl bg-[#FDF4FF] text-[#C026D3] hover:bg-[#FAE8FF] font-black h-9 px-4 text-xs border border-pink-100 shadow-sm">교환하기</Button>
+                </CardContent>
+              </Card>
+            )) : (
+              <div className="flex flex-col items-center justify-center py-8 opacity-40">
+                <PackageOpen className="w-10 h-10 mb-2 text-pink-300" />
+                <p className="text-sm font-bold text-pink-400">보관함이 비어있어요</p>
+              </div>
+            )}
+          </div>
         </div>
+      </div>
+
+      <div className="space-y-2 pb-10">
+        <button onClick={() => setShowUsedHistory(!showUsedHistory)} className="w-full flex items-center justify-center gap-2 text-gray-400 font-bold text-sm py-2 hover:text-gray-600 transition-colors">
+          사용 완료 내역 보기 {showUsedHistory ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+        </button>
+        {showUsedHistory && (
+          <div className="space-y-3 animate-in slide-in-from-top-2 duration-300">
+            {usedItems.length > 0 ? usedItems.map((item: any) => (
+              <div key={item.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-3xl opacity-60">
+                <div className="flex items-center gap-3">
+                  <CheckCircle2 className="w-5 h-5 text-gray-400" />
+                  <div>
+                    <p className="text-sm font-bold text-gray-600 line-through">{item.name}</p>
+                    <p className="text-[10px] text-gray-400">{new Date(item.usedAt).toLocaleDateString()} 사용됨</p>
+                  </div>
+                </div>
+                <Badge variant="outline" className="text-gray-400 text-[10px]">교환완료</Badge>
+              </div>
+            )) : <p className="text-center py-4 text-xs font-bold text-gray-300">내역이 없습니다.</p>}
+          </div>
+        )}
       </div>
 
       <Dialog open={isAdminDialogOpen} onOpenChange={setIsAdminDialogOpen}>
@@ -322,29 +299,6 @@ export default function MyProfilePage() {
           <DialogFooter><Button onClick={handleAdminEntryAuth} className="w-full h-14 rounded-2xl bg-blue-600 hover:bg-blue-700 font-black text-lg shadow-lg shadow-blue-100">인증 완료</Button></DialogFooter>
         </DialogContent>
       </Dialog>
-
-      <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white/95 backdrop-blur-md border-t-2 border-blue-100 px-6 py-4 flex justify-between items-center rounded-t-[2.5rem] z-50 shadow-[0_-10px_30px_rgba(0,0,0,0.1)]">
-        <Link href="/dashboard" className="flex flex-col items-center gap-1 group text-gray-400">
-          <BookOpen className="w-6 h-6" />
-          <span className="text-[11px] font-bold">QT</span>
-        </Link>
-        <Link href="/dashboard/activity" className="flex flex-col items-center gap-1 group text-gray-400">
-          <Zap className="w-6 h-6" />
-          <span className="text-[11px] font-bold">활동</span>
-        </Link>
-        <Link href="/dashboard/ranking" className="flex flex-col items-center gap-1 group text-gray-400">
-          <Trophy className="w-6 h-6" />
-          <span className="text-[11px] font-bold">랭킹</span>
-        </Link>
-        <Link href="/dashboard/quiz" className="flex flex-col items-center gap-1 group text-gray-400">
-          <ShoppingBag className="w-6 h-6" />
-          <span className="text-[11px] font-bold">상점</span>
-        </Link>
-        <Link href="/dashboard/my" className="flex flex-col items-center gap-1 group">
-          <UserIcon className="w-6 h-6 text-[#C026D3]" />
-          <span className="text-[11px] font-black text-[#C026D3]">MY</span>
-        </Link>
-      </nav>
     </div>
   );
 }
