@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { toast } from "@/hooks/use-toast";
@@ -20,12 +21,21 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
-    username: '', // 한글 포함 가능한 아이디
+    username: '', 
     role: '',
     gender: '',
     phone: '',
     password: ''
   });
+
+  // 한글 아이디를 안전한 이메일 형식으로 변환하는 함수 (브라우저 표준)
+  const encodeUsername = (str: string) => {
+    const encoder = new TextEncoder();
+    const bytes = encoder.encode(str);
+    return Array.from(bytes)
+      .map(b => b.toString(16).padStart(2, '0'))
+      .join('');
+  };
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,24 +53,18 @@ export default function RegisterPage() {
 
     setLoading(true);
     
-    // 이메일 형식 생성을 위한 안전한 변환 (한글 아이디 지원)
-    // Firebase Auth는 특수문자나 한글이 포함된 이메일 로컬 파트를 거부할 수 있으므로
-    // 실제 인증 이메일은 인코딩된 형식을 사용합니다.
-    const encodedId = Buffer.from(cleanUsername).toString('hex');
+    const encodedId = encodeUsername(cleanUsername);
     const internalEmail = `${encodedId}@yebon.teen`;
 
     try {
-      // 1. Firebase Auth 계정 생성
       const userCredential = await createUserWithEmailAndPassword(auth, internalEmail, formData.password);
       const user = userCredential.user;
 
-      // 2. 프로필 이름 업데이트
       await updateProfile(user, { displayName: formData.name });
 
-      // 3. Firestore에 사용자 상세 프로필 저장
       await setDoc(doc(firestore, "users", user.uid), {
         id: user.uid,
-        username: cleanUsername, // 원본 한글 아이디 저장
+        username: cleanUsername,
         displayName: formData.name,
         email: internalEmail,
         role: formData.role,
@@ -79,6 +83,7 @@ export default function RegisterPage() {
       
       if (error.code === 'auth/email-already-in-use') message = "이미 사용 중인 아이디입니다.";
       if (error.code === 'auth/invalid-email') message = "아이디 형식이 올바르지 않습니다.";
+      if (error.code === 'auth/weak-password') message = "비밀번호가 너무 약합니다.";
       
       toast({ title: "가입 실패", description: message, variant: "destructive" });
       setLoading(false);
@@ -100,70 +105,77 @@ export default function RegisterPage() {
             </div>
 
             <form onSubmit={handleRegister} className="space-y-4">
-              <div className="space-y-2">
+              <div className="space-y-1">
+                <Label className="text-[10px] font-bold text-gray-400 ml-1">이름</Label>
                 <Input 
-                  placeholder="이름 (실명)" 
+                  placeholder="실명을 입력하세요" 
                   className="h-14 bg-[#F8FAFC] border-[#F1F5F9] rounded-2xl px-6 focus-visible:ring-[#C026D3]/20"
                   value={formData.name}
                   onChange={(e) => setFormData({...formData, name: e.target.value})}
                 />
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-1">
+                <Label className="text-[10px] font-bold text-gray-400 ml-1">아이디</Label>
                 <Input 
-                  placeholder="로그인 아이디" 
+                  placeholder="사용할 아이디를 입력하세요" 
                   className="h-14 bg-[#F8FAFC] border-[#F1F5F9] rounded-2xl px-6 focus-visible:ring-[#C026D3]/20"
                   value={formData.username}
                   onChange={(e) => setFormData({...formData, username: e.target.value})}
                 />
               </div>
 
-              <div className="space-y-2">
-                <Select onValueChange={(val) => setFormData({...formData, role: val})}>
-                  <SelectTrigger className="h-14 bg-[#F8FAFC] border-[#F1F5F9] rounded-2xl px-6 text-gray-500">
-                    <SelectValue placeholder="소속 (학년/직분) 선택" />
-                  </SelectTrigger>
-                  <SelectContent className="rounded-xl border-none shadow-xl">
-                    <SelectItem value="grade7">중학교 1학년</SelectItem>
-                    <SelectItem value="grade8">중학교 2학년</SelectItem>
-                    <SelectItem value="grade9">중학교 3학년</SelectItem>
-                    <SelectItem value="grade10">고등학교 1학년</SelectItem>
-                    <SelectItem value="grade11">고등학교 2학년</SelectItem>
-                    <SelectItem value="grade12">고등학교 3학년</SelectItem>
-                    <SelectItem value="teacher">교사</SelectItem>
-                    <SelectItem value="pastor">교역자</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Select onValueChange={(val) => setFormData({...formData, gender: val})}>
-                  <SelectTrigger className="h-14 bg-[#F8FAFC] border-[#F1F5F9] rounded-2xl px-6 text-gray-500">
-                    <SelectValue placeholder="성별 선택" />
-                  </SelectTrigger>
-                  <SelectContent className="rounded-xl border-none shadow-xl">
-                    <SelectItem value="male">남성</SelectItem>
-                    <SelectItem value="female">여성</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Input 
-                  placeholder="전화번호 (예: 01012345678)" 
-                  className="h-14 bg-[#F8FAFC] border-[#F1F5F9] rounded-2xl px-6 focus-visible:ring-[#C026D3]/20"
-                  value={formData.phone}
-                  onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                />
-              </div>
-
-              <div className="space-y-2">
+              <div className="space-y-1">
+                <Label className="text-[10px] font-bold text-gray-400 ml-1">비밀번호</Label>
                 <Input 
                   type="password" 
                   placeholder="비밀번호 (6자 이상)" 
                   className="h-14 bg-[#F8FAFC] border-[#F1F5F9] rounded-2xl px-6 focus-visible:ring-[#C026D3]/20"
                   value={formData.password}
                   onChange={(e) => setFormData({...formData, password: e.target.value})}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label className="text-[10px] font-bold text-gray-400 ml-1">소속</Label>
+                  <Select onValueChange={(val) => setFormData({...formData, role: val})}>
+                    <SelectTrigger className="h-14 bg-[#F8FAFC] border-[#F1F5F9] rounded-2xl px-6 text-gray-500">
+                      <SelectValue placeholder="선택" />
+                    </SelectTrigger>
+                    <SelectContent className="rounded-xl border-none shadow-xl">
+                      <SelectItem value="grade7">중1</SelectItem>
+                      <SelectItem value="grade8">중2</SelectItem>
+                      <SelectItem value="grade9">중3</SelectItem>
+                      <SelectItem value="grade10">고1</SelectItem>
+                      <SelectItem value="grade11">고2</SelectItem>
+                      <SelectItem value="grade12">고3</SelectItem>
+                      <SelectItem value="teacher">교사</SelectItem>
+                      <SelectItem value="pastor">교역자</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-[10px] font-bold text-gray-400 ml-1">성별</Label>
+                  <Select onValueChange={(val) => setFormData({...formData, gender: val})}>
+                    <SelectTrigger className="h-14 bg-[#F8FAFC] border-[#F1F5F9] rounded-2xl px-6 text-gray-500">
+                      <SelectValue placeholder="선택" />
+                    </SelectTrigger>
+                    <SelectContent className="rounded-xl border-none shadow-xl">
+                      <SelectItem value="male">남성</SelectItem>
+                      <SelectItem value="female">여성</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <Label className="text-[10px] font-bold text-gray-400 ml-1">전화번호</Label>
+                <Input 
+                  placeholder="예: 01012345678" 
+                  className="h-14 bg-[#F8FAFC] border-[#F1F5F9] rounded-2xl px-6 focus-visible:ring-[#C026D3]/20"
+                  value={formData.phone}
+                  onChange={(e) => setFormData({...formData, phone: e.target.value})}
                 />
               </div>
 

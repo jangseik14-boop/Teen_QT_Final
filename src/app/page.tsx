@@ -20,6 +20,15 @@ export default function LoginPage() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
 
+  // 한글 아이디를 안전한 이메일 형식으로 변환하는 함수
+  const encodeUsername = (str: string) => {
+    const encoder = new TextEncoder();
+    const bytes = encoder.encode(str);
+    return Array.from(bytes)
+      .map(b => b.toString(16).padStart(2, '0'))
+      .join('');
+  };
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     const cleanUsername = username.trim();
@@ -30,8 +39,7 @@ export default function LoginPage() {
     }
 
     setLoading(true);
-    // 한글 아이디 대응을 위한 인코딩 변환
-    const encodedId = Buffer.from(cleanUsername).toString('hex');
+    const encodedId = encodeUsername(cleanUsername);
     const internalEmail = `${encodedId}@yebon.teen`;
 
     try {
@@ -43,7 +51,7 @@ export default function LoginPage() {
       let message = "아이디 또는 비밀번호를 확인해주세요.";
       if (error.code === 'auth/user-not-found') message = "가입되지 않은 아이디입니다.";
       if (error.code === 'auth/wrong-password') message = "비밀번호가 일치하지 않습니다.";
-      if (error.code === 'auth/invalid-email') message = "아이디 형식이 올바르지 않습니다.";
+      if (error.code === 'auth/invalid-credential') message = "로그인 정보가 올바르지 않습니다.";
       
       toast({ title: "로그인 실패", description: message, variant: "destructive" });
       setLoading(false);
@@ -66,18 +74,22 @@ export default function LoginPage() {
 
             <form onSubmit={handleLogin} className="space-y-4">
               <div className="space-y-2">
+                <Label htmlFor="username" className="text-xs font-bold text-gray-400 ml-1">아이디</Label>
                 <Input 
+                  id="username"
                   type="text" 
-                  placeholder="아이디" 
+                  placeholder="아이디를 입력하세요" 
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   className="h-14 bg-[#F8FAFC] border-[#F1F5F9] rounded-2xl px-6 focus-visible:ring-[#C026D3]/20 placeholder:text-gray-300"
                 />
               </div>
               <div className="space-y-2">
+                <Label htmlFor="password" className="text-xs font-bold text-gray-400 ml-1">비밀번호</Label>
                 <Input 
+                  id="password"
                   type="password" 
-                  placeholder="비밀번호" 
+                  placeholder="비밀번호를 입력하세요" 
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="h-14 bg-[#F8FAFC] border-[#F1F5F9] rounded-2xl px-6 focus-visible:ring-[#C026D3]/20 placeholder:text-gray-300"
@@ -108,7 +120,7 @@ export default function LoginPage() {
                 href="/register" 
                 className="text-sm font-medium text-gray-400 hover:text-gray-600 underline underline-offset-4 decoration-gray-300"
               >
-                회원가입하기
+                처음이신가요? 회원가입하기
               </Link>
             </div>
           </CardContent>
