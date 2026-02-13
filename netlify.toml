@@ -7,5 +7,5 @@
 
 [build.environment]
   NODE_VERSION = "20"
-  # 보안 스캐너가 빌드를 차단하지 않도록 설정
   NETLIFY_SKIP_SECRET_SCANNING = "true"
+  NEXT_USE_NETLIFY_EDGE = "true"
