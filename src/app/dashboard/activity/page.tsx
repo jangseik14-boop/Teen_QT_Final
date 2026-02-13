@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -20,7 +21,7 @@ import {
 import Link from "next/link";
 import { useUser, useFirestore, useDoc, setDocumentNonBlocking, updateDocumentNonBlocking, useMemoFirebase } from "@/firebase";
 import { doc } from "firebase/firestore";
-import { generateQuiz, GenerateQuizOutput } from "@/ai/flows/generate-quiz";
+import { generateQuiz } from "@/ai/flows/generate-quiz";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
@@ -35,23 +36,29 @@ export default function ActivityPage() {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
 
+  // 사용자 프로필 참조
   const userRef = useMemoFirebase(() => user ? doc(firestore, "users", user.uid) : null, [user, firestore]);
   const { data: userProfile } = useDoc(userRef);
 
+  // 오늘의 공통 퀴즈 참조 (모든 유저 동일)
   const globalQuizRef = useMemoFirebase(() => doc(firestore, "dailyQuizzes", todayId), [firestore, todayId]);
   const { data: dailyQuiz, isLoading: isQuizLoading } = useDoc(globalQuizRef);
 
+  // 현재 유저의 퀴즈 참여 기록 참조
   const userActivityRef = useMemoFirebase(() => user ? doc(firestore, `users/${user.uid}/activities/${todayId}`) : null, [user, firestore, todayId]);
   const { data: userActivity } = useDoc(userActivityRef);
 
+  // 퀴즈가 없으면 생성하여 전역 저장소에 저장하는 로직
   useEffect(() => {
     const fetchOrGenerateQuiz = async () => {
+      // 이미 퀴즈가 있거나 생성 중이면 중단
       if (isQuizLoading || dailyQuiz?.question || isGenerating) return;
 
       setIsGenerating(true);
       try {
         const result = await generateQuiz();
         if (result && result.question) {
+          // 중앙 저장소에 오늘 날짜의 퀴즈 저장 (최초 1회만 실행됨)
           setDocumentNonBlocking(globalQuizRef, {
             ...result,
             createdAt: new Date().toISOString()
@@ -75,6 +82,7 @@ export default function ActivityPage() {
     setIsSubmitted(true);
     const isCorrect = selectedOption === dailyQuiz.correctIndex;
 
+    // 참여 기록 저장
     setDocumentNonBlocking(userActivityRef!, {
       completedAt: new Date().toISOString(),
       isCorrect,
@@ -118,7 +126,7 @@ export default function ActivityPage() {
           {!dailyQuiz && (isGenerating || isQuizLoading) ? (
             <Card className="border-none shadow-sm rounded-[2rem] bg-white p-10 flex flex-col items-center justify-center gap-4">
               <Loader2 className="w-10 h-10 animate-spin text-purple-400" />
-              <p className="text-sm font-bold text-gray-400">AI가 재미있는 퀴즈를 만드는 중...</p>
+              <p className="text-sm font-bold text-gray-400">AI가 오늘의 공통 퀴즈를 만드는 중...</p>
             </Card>
           ) : (
             <Card className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden ring-1 ring-gray-100">
@@ -131,7 +139,7 @@ export default function ActivityPage() {
                 </div>
 
                 <div className="space-y-3">
-                  {dailyQuiz?.options.map((option, index) => {
+                  {dailyQuiz?.options.map((option: string, index: number) => {
                     const isCompleted = !!userActivity || isSubmitted;
                     const isCorrect = index === dailyQuiz.correctIndex;
                     const isSelected = selectedOption === index || userActivity?.selectedOption === index;
