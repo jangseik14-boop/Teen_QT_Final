@@ -57,10 +57,11 @@ export default function RegisterPage() {
       toast({ title: "환영합니다!", description: "회원가입이 완료되었습니다. 이제 묵상을 시작해보세요!" });
       router.push('/dashboard');
     } catch (error: any) {
-      console.error("가입 실패:", error);
+      console.error("가입 실패 상세:", error);
       let message = "회원가입 중 오류가 발생했습니다.";
       if (error.code === 'auth/email-already-in-use') message = "이미 사용 중인 이메일입니다.";
       if (error.code === 'auth/weak-password') message = "비밀번호는 최소 6자 이상이어야 합니다.";
+      if (error.code === 'auth/invalid-email') message = "올바른 이메일 형식이 아닙니다.";
       
       toast({ title: "가입 실패", description: message, variant: "destructive" });
       setLoading(false);
