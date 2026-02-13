@@ -4,11 +4,12 @@
 사진 속 화면에서 배포를 완료하는 방법입니다.
 
 ### ✅ 1단계: 빌드 설정 확인 (사진 속 화면)
-*   **Project name**: `ybteenqt` (잘 입력하셨습니다!)
-*   **Branch to deploy**: `main` (기본값 그대로 두세요)
+*   **Build command**: `npm run build`
+*   **Publish directory**: `.next`
+*   (기본값이 위와 같다면 그대로 두시면 됩니다.)
 
 ### ✅ 2단계: 환경 변수 설정 (가장 중요! ⭐️)
-현재 보고 계신 화면에서 **마우스를 아래로 조금 더 내리면** **[Add environment variables]** 버튼이 보입니다. 클릭해서 아래 3개를 똑같이 입력하세요.
+화면 중간의 **[Add environment variables]** 버튼을 클릭하고 **[Add a single variable]**을 눌러 다음 3개를 입력하세요.
 
 1.  **Key**: `GEMINI_API_KEY`
     **Value**: `AIzaSyC2ArqCoWfqaR45OwCGKTaAeRwSZoVQjvU`
@@ -18,7 +19,7 @@
     **Value**: `20`
 
 ### ✅ 3단계: 배포 시작
-입력이 끝났다면 맨 아래에 있는 파란색 **[Deploy site]** 버튼을 누르면 끝!
+모두 입력했다면 맨 아래의 하늘색 **[Deploy ybteenqt]** 버튼을 누르면 끝!
 
 ---
-**팁**: 약 1~2분 뒤에 배포가 완료되면 상단에 `https://ybteenqt.netlify.app` 링크가 활성화됩니다. 클릭해서 접속해 보세요!
+**팁**: 배포가 완료되면 `https://ybteenqt.netlify.app` 같은 링크가 생깁니다. 그 주소로 접속하시면 됩니다!
