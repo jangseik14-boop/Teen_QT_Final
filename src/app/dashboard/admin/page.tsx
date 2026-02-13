@@ -39,10 +39,9 @@ export default function AdminDashboardPage() {
   const firestore = useFirestore();
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [editPoints, setEditPoints] = useState<number>(0);
-  const [editTotalPoints, setEditTotalPoints] = useState<number>(0);
   const [isManageOpen, setIsManageOpen] = useState(false);
 
-  // 모든 사용자 가져오기 (필드 누락자 방지를 위해 정렬 없이 가져옴)
+  // 모든 사용자 가져오기
   const usersQuery = useMemoFirebase(() => query(
     collection(firestore, "users")
   ), [firestore]);
@@ -92,18 +91,29 @@ export default function AdminDashboardPage() {
   const handleManageUser = (user: any) => {
     setSelectedUser(user);
     setEditPoints(user.points || 0);
-    setEditTotalPoints(user.totalPoints || 0);
     setIsManageOpen(true);
   };
 
   const handleUpdatePoints = () => {
     if (!selectedUser) return;
+    
+    const oldPoints = selectedUser.points || 0;
+    const newPoints = editPoints;
+    const diff = newPoints - oldPoints;
+    
+    // 누적 포인트(totalPoints)는 현재 포인트가 높아진 만큼만 자동으로 더해줌
+    let updatedTotalPoints = selectedUser.totalPoints || 0;
+    if (diff > 0) {
+      updatedTotalPoints += diff;
+    }
+
     const userRef = doc(firestore, "users", selectedUser.id);
     updateDocumentNonBlocking(userRef, {
-      points: editPoints,
-      totalPoints: editTotalPoints,
+      points: newPoints,
+      totalPoints: updatedTotalPoints,
       updatedAt: new Date().toISOString()
     });
+    
     toast({ title: "수정 완료", description: `${selectedUser.displayName}님의 정보가 수정되었습니다.` });
     setIsManageOpen(false);
   };
@@ -253,16 +263,17 @@ export default function AdminDashboardPage() {
                     type="number"
                     value={editPoints}
                     onChange={(e) => setEditPoints(Number(e.target.value))}
-                    className="h-12 bg-gray-50 border-none rounded-xl text-center font-black text-lg"
+                    className="h-12 bg-gray-50 border-none rounded-xl text-center font-black text-lg focus-visible:ring-purple-200"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black text-purple-400 ml-1 uppercase tracking-wider italic">Total (D)</Label>
+                  <Label className="text-[10px] font-black text-purple-400 ml-1 uppercase tracking-wider italic">Total (D) - Auto</Label>
                   <Input 
                     type="number"
-                    value={editTotalPoints}
-                    onChange={(e) => setEditTotalPoints(Number(e.target.value))}
-                    className="h-12 bg-purple-50 border-none rounded-xl text-center font-black text-lg text-purple-700"
+                    value={selectedUser?.totalPoints || 0}
+                    readOnly
+                    disabled
+                    className="h-12 bg-purple-50/50 border-none rounded-xl text-center font-black text-lg text-purple-700 opacity-70 cursor-not-allowed"
                   />
                 </div>
               </div>
