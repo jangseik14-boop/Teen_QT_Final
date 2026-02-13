@@ -30,7 +30,6 @@ export default function RegisterPage() {
 
     setLoading(true);
     // 실제 Firebase 연동 시 여기에 createUserWithEmailAndPassword와 Firestore 저장이 들어갑니다.
-    // 현재는 프로토타입 동작을 위해 성공 메시지 후 이동합니다.
     try {
       setTimeout(() => {
         toast({ title: "환영합니다!", description: "회원가입이 완료되었습니다." });
@@ -38,8 +37,7 @@ export default function RegisterPage() {
       }, 1500);
     } catch (error) {
       toast({ title: "가입 실패", description: "다시 시도해주세요.", variant: "destructive" });
-    } finally {
-      // setLoading(false);
+      setLoading(false);
     }
   };
 
@@ -81,7 +79,8 @@ export default function RegisterPage() {
                     <SelectItem value="grade10">고등학교 1학년</SelectItem>
                     <SelectItem value="grade11">고등학교 2학년</SelectItem>
                     <SelectItem value="grade12">고등학교 3학년</SelectItem>
-                    <SelectItem value="teacher">교사/리더</SelectItem>
+                    <SelectItem value="teacher">교사</SelectItem>
+                    <SelectItem value="pastor">교역자</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
