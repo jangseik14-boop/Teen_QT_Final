@@ -78,7 +78,7 @@ export default function RankingPage() {
         </div>
 
         {/* Ranking List */}
-        <div className="w-full space-y-4">
+        <div className="w-full space-y-5">
           {isLoading ? (
             <div className="flex flex-col items-center py-20 gap-4">
               <Sparkles className="w-10 h-10 text-purple-200 animate-pulse" />
@@ -133,56 +133,84 @@ function RankingItem({ rank, user, isMe, roleLabel }: { rank: number, user: any,
   const isTop3 = rank <= 3;
   
   const rankColors: Record<number, string> = {
-    1: "bg-gradient-to-tr from-yellow-400 via-orange-300 to-yellow-500 border-yellow-200 ring-4 ring-yellow-100 shadow-yellow-100",
-    2: "bg-gradient-to-tr from-slate-200 via-slate-100 to-slate-400 border-slate-200 ring-4 ring-slate-100 shadow-slate-50",
-    3: "bg-gradient-to-tr from-[#92400E] via-[#78350F] to-[#451A03] border-[#78350F] ring-4 ring-orange-100 shadow-orange-50"
+    1: "bg-gradient-to-tr from-yellow-400 via-yellow-200 to-yellow-600 border-yellow-300 ring-4 ring-yellow-100 shadow-xl shadow-yellow-200",
+    2: "bg-gradient-to-tr from-slate-200 via-slate-100 to-slate-400 border-slate-300 ring-4 ring-slate-100 shadow-md shadow-slate-100",
+    3: "bg-gradient-to-tr from-[#92400E] via-[#78350F] to-[#451A03] border-[#78350F] ring-4 ring-orange-100/50 shadow-md shadow-orange-50"
   };
 
   const rankIcons: Record<number, React.ReactNode> = {
-    1: <div className="relative animate-bounce duration-1000"><Crown className="w-8 h-8 text-white fill-white" /></div>,
+    1: (
+      <div className="relative">
+        <div className="absolute -inset-2 bg-yellow-400/30 blur-md rounded-full animate-pulse" />
+        <div className="relative animate-bounce duration-1000">
+          <Crown className="w-9 h-9 text-white fill-white drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]" />
+        </div>
+        <Sparkles className="absolute -top-1 -right-1 w-4 h-4 text-yellow-100 animate-pulse" />
+      </div>
+    ),
     2: <Crown className="w-7 h-7 text-white fill-white opacity-95" />,
     3: <Crown className="w-7 h-7 text-orange-200 fill-orange-200 opacity-90" />
   };
 
-  // 등수별 카드 테두리 스타일
-  const cardBorderClasses = rank === 1 
-    ? "border-4 border-yellow-200 shadow-2xl scale-[1.02]" 
+  // 등수별 카드 테두리 스타일 및 특수 효과
+  const cardClasses = rank === 1 
+    ? "border-4 border-yellow-400/50 shadow-[0_20px_50px_rgba(255,223,0,0.2)] scale-[1.05] ring-4 ring-yellow-200/20 bg-gradient-to-br from-yellow-50 via-white to-orange-50 z-10" 
     : rank === 2 
-    ? "border-2 border-slate-300 shadow-lg ring-2 ring-slate-100" 
+    ? "border-2 border-slate-300 shadow-lg ring-2 ring-slate-100 bg-white" 
     : rank === 3 
-    ? "border-2 border-[#92400E]/30 shadow-md ring-2 ring-orange-100/50" 
-    : "border-2 border-gray-50 shadow-sm";
+    ? "border-2 border-[#92400E]/30 shadow-md ring-2 ring-orange-100/50 bg-white" 
+    : "border-2 border-gray-50 shadow-sm bg-white";
 
   return (
     <Card className={cn(
-      "border-none rounded-[2rem] transition-all duration-500 overflow-hidden bg-white",
+      "border-none rounded-[2.5rem] transition-all duration-500 overflow-hidden relative",
+      cardClasses,
       isMe && rank > 3 ? "ring-2 ring-purple-100" : ""
     )}>
+      {rank === 1 && (
+        <div className="absolute top-0 right-0 p-3">
+          <Badge className="bg-yellow-500 hover:bg-yellow-600 text-white border-none font-black italic tracking-tighter animate-pulse shadow-sm">CHAMPION</Badge>
+        </div>
+      )}
+      
       <CardContent className={cn(
         "p-5 flex items-center justify-between transition-all",
-        cardBorderClasses
+        rank === 1 ? "py-7" : ""
       )}>
         <div className="flex items-center gap-4">
           {/* Rank Badge */}
           <div className={cn(
-            "w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 shadow-lg",
-            rankColors[rank] || "bg-gray-100 border-gray-50"
+            "w-14 h-14 rounded-[1.5rem] flex items-center justify-center shrink-0 transition-transform",
+            rankColors[rank] || "bg-gray-100 border-gray-50",
+            rank === 1 ? "scale-110" : ""
           )}>
-            {rankIcons[rank] || <span className="font-black text-gray-400 text-lg">{rank}</span>}
+            {rankIcons[rank] || <span className="font-black text-gray-400 text-xl">{rank}</span>}
           </div>
 
           {/* User Info */}
           <div className="flex items-center gap-3">
-            <Avatar className={cn(
-              "w-12 h-12 border-2",
-              rank === 1 ? "border-yellow-200" : rank === 2 ? "border-slate-200" : rank === 3 ? "border-orange-200" : "border-gray-100"
-            )}>
-              <AvatarImage src={`https://picsum.photos/seed/${user.id}/200`} />
-              <AvatarFallback>{user.displayName?.[0]}</AvatarFallback>
-            </Avatar>
+            <div className="relative">
+              <Avatar className={cn(
+                "w-12 h-12 border-2",
+                rank === 1 ? "w-14 h-14 border-yellow-400 ring-2 ring-yellow-100" : rank === 2 ? "border-slate-300" : rank === 3 ? "border-orange-300" : "border-gray-100"
+              )}>
+                <AvatarImage src={`https://picsum.photos/seed/${user.id}/200`} />
+                <AvatarFallback className="font-black text-lg bg-gray-50">{user.displayName?.[0]}</AvatarFallback>
+              </Avatar>
+              {rank === 1 && (
+                <div className="absolute -bottom-1 -right-1 bg-yellow-500 rounded-full p-0.5 border-2 border-white shadow-sm">
+                  <Star className="w-3 h-3 text-white fill-white" />
+                </div>
+              )}
+            </div>
             <div className="space-y-0.5">
               <div className="flex items-center gap-1.5">
-                <span className="font-black text-[17px] text-gray-800 tracking-tight">{user.displayName}</span>
+                <span className={cn(
+                  "font-black tracking-tight",
+                  rank === 1 ? "text-xl text-yellow-900" : "text-[17px] text-gray-800"
+                )}>
+                  {user.displayName}
+                </span>
                 {isMe && <Badge className="bg-orange-400 text-white border-none font-black text-[9px] px-1.5 h-4">나</Badge>}
               </div>
               <p className="text-[11px] font-bold text-gray-400 uppercase tracking-tighter">{roleLabel}</p>
@@ -194,8 +222,8 @@ function RankingItem({ rank, user, isMe, roleLabel }: { rank: number, user: any,
         <div className="text-right">
           <div className="flex items-center justify-end gap-1.5">
             <span className={cn(
-              "text-lg font-black italic tracking-tighter",
-              rank === 1 ? "text-orange-500" : rank === 2 ? "text-slate-500" : rank === 3 ? "text-[#92400E]" : "text-gray-800"
+              "font-black italic tracking-tighter",
+              rank === 1 ? "text-2xl text-orange-600" : rank === 2 ? "text-xl text-slate-600" : rank === 3 ? "text-xl text-[#92400E]" : "text-lg text-gray-800"
             )}>
               {(user.totalPoints || 0).toLocaleString()}
             </span>
