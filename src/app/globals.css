@@ -4,24 +4,24 @@
 
 @layer base {
   :root {
-    --background: 210 40% 98%; /* 매우 연한 파란색 배경 */
-    --foreground: 210 40% 10%;
+    --background: 210 100% 98%; /* 시원한 연파란색 배경 */
+    --foreground: 222 47% 11%;
     --card: 0 0% 100%;
-    --card-foreground: 210 40% 10%;
+    --card-foreground: 222 47% 11%;
     --popover: 0 0% 100%;
-    --popover-foreground: 210 40% 10%;
-    --primary: 262 83% 58%; /* 보라색 포인트 */
+    --popover-foreground: 222 47% 11%;
+    --primary: 262 83% 58%;
     --primary-foreground: 210 20% 98%;
-    --secondary: 210 20% 90%;
-    --secondary-foreground: 210 60% 30%;
-    --muted: 210 15% 90%;
-    --muted-foreground: 210 20% 40%;
-    --accent: 180 70% 45%; /* 청록색 포인트 */
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222 47% 11%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 180 70% 45%;
     --accent-foreground: 180 70% 98%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 20% 98%;
-    --border: 210 30% 90%;
-    --input: 210 30% 90%;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
     --ring: 262 83% 58%;
     --radius: 1.5rem;
   }
@@ -32,7 +32,7 @@
     @apply border-border;
   }
   body {
-    @apply bg-[#F0F7FF] text-foreground font-body; /* 바탕화면 전체를 연한 파란색으로 */
+    @apply bg-[#F0F7FF] text-foreground font-body;
   }
   h1, h2, h3, h4, h5, h6 {
     @apply font-headline tracking-tighter font-bold;
