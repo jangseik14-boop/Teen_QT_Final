@@ -1,10 +1,11 @@
+
 import type {Metadata} from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 
 export const metadata: Metadata = {
-  title: 'VibeWord - Youth Meditation Studio',
-  description: 'Hip & Deep Bible Meditation for Teens',
+  title: '예본TeenQT - 청소년부 매일 묵상',
+  description: '청소년을 위한 감성 묵상 서비스',
 };
 
 export default function RootLayout({
