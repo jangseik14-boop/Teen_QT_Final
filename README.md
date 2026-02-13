@@ -3,15 +3,15 @@
 
 클라우드플레어 배포 시 아래 설정값을 **반드시** 업데이트해야 배포에 성공합니다!
 
-### 1️⃣ 빌드 설정 수정 (Build Settings)
-클라우드플레어 대시보드 [Settings] -> [Build & deployments] 에서 수정하세요.
+### 1️⃣ 빌드 설정 수정 (오른쪽 메뉴 'Build' 클릭)
+클라우드플레어 대시보드 [Settings] -> [Build] 에서 수정하세요.
 
 - **Build command**: `npm run build`
 - **Build output directory**: `.vercel/output/static` (기존 .next에서 이걸로 꼭 바꿔주세요!)
 
 ---
 
-### 2️⃣ 환경 변수 설정 (Environment Variables)
+### 2️⃣ 환경 변수 설정 (오른쪽 메뉴 'Variables and Secrets' 클릭)
 [Settings] -> [Variables and Secrets] 에서 아래 3개를 추가하세요.
 
 | Variable Name | Value | 설명 |
@@ -22,11 +22,11 @@
 
 ---
 
-### 3️⃣ 호환성 플래그 (Compatibility Flags)
-[Settings] -> [Functions] -> [Compatibility flags]
+### 3️⃣ 호환성 플래그 (오른쪽 메뉴 'Runtime' 또는 'Build' 근처 확인)
+[Settings] -> [Functions] (또는 Runtime 설정)
 
-- **Production** 및 **Preview** 섹션에 **`nodejs_compat`** 플래그 추가 후 저장
+- **`nodejs_compat`** 플래그 추가 확인 (wrangler.jsonc에 이미 포함되어 있지만, 대시보드에서 보이면 활성화하세요)
 
 ---
 
-**이 설정을 마치고 [Retry build]를 누르면 이제 정말 사이트가 열립니다! 🎉**
+**이 설정을 마치고 [Deployments] 탭으로 가서 [Retry build]를 누르면 이제 정말 사이트가 열립니다! 🎉**
