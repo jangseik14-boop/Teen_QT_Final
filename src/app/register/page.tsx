@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState } from 'react';
@@ -8,9 +9,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { toast } from "@/hooks/use-toast";
+import { useAuth, useFirestore } from "@/firebase";
+import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
+import { doc, setDoc } from "firebase/firestore";
 
 export default function RegisterPage() {
   const router = useRouter();
+  const auth = useAuth();
+  const firestore = useFirestore();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
@@ -23,20 +29,40 @@ export default function RegisterPage() {
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.email || !formData.password || !formData.name) {
-      toast({ title: "입력 오류", description: "모든 필드를 채워주세요.", variant: "destructive" });
+    if (!formData.email || !formData.password || !formData.name || !formData.role) {
+      toast({ title: "입력 오류", description: "모든 필수 필드를 채워주세요.", variant: "destructive" });
       return;
     }
 
     setLoading(true);
-    // 실제 Firebase 연동 시 여기에 createUserWithEmailAndPassword와 Firestore 저장이 들어갑니다.
     try {
-      setTimeout(() => {
-        toast({ title: "환영합니다!", description: "회원가입이 완료되었습니다." });
-        router.push('/dashboard');
-      }, 1500);
-    } catch (error) {
-      toast({ title: "가입 실패", description: "다시 시도해주세요.", variant: "destructive" });
+      const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
+      const user = userCredential.user;
+
+      await updateProfile(user, { displayName: formData.name });
+
+      // Firestore에 사용자 프로필 생성
+      await setDoc(doc(firestore, "users", user.uid), {
+        id: user.uid,
+        displayName: formData.name,
+        email: formData.email,
+        role: formData.role,
+        gender: formData.gender,
+        phone: formData.phone,
+        points: 0,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      });
+
+      toast({ title: "환영합니다!", description: "회원가입이 완료되었습니다. 이제 묵상을 시작해보세요!" });
+      router.push('/dashboard');
+    } catch (error: any) {
+      console.error("가입 실패:", error);
+      let message = "회원가입 중 오류가 발생했습니다.";
+      if (error.code === 'auth/email-already-in-use') message = "이미 사용 중인 이메일입니다.";
+      if (error.code === 'auth/weak-password') message = "비밀번호는 최소 6자 이상이어야 합니다.";
+      
+      toast({ title: "가입 실패", description: message, variant: "destructive" });
       setLoading(false);
     }
   };
@@ -46,7 +72,6 @@ export default function RegisterPage() {
       <div className="w-full max-w-[440px] px-6">
         <Card className="border-none shadow-[0_20px_50px_rgba(0,0,0,0.1)] rounded-[40px] overflow-hidden bg-white/95 backdrop-blur-sm">
           <CardContent className="pt-16 pb-12 px-10 space-y-8">
-            {/* Header */}
             <div className="text-center space-y-2">
               <h1 className="text-4xl font-black tracking-tight text-[#C026D3]">
                 예본TeenQT
@@ -56,7 +81,6 @@ export default function RegisterPage() {
               </p>
             </div>
 
-            {/* Form */}
             <form onSubmit={handleRegister} className="space-y-4">
               <div className="space-y-2">
                 <Input 

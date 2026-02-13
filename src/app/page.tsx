@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState } from 'react';
@@ -9,9 +10,12 @@ import { Label } from "@/components/ui/label";
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { toast } from "@/hooks/use-toast";
+import { useAuth } from "@/firebase";
+import { signInWithEmailAndPassword } from "firebase/auth";
 
 export default function LoginPage() {
   const router = useRouter();
+  const auth = useAuth();
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -24,14 +28,17 @@ export default function LoginPage() {
     }
 
     setLoading(true);
-    // 실제 Firebase Auth 연동 시 여기에 signInWithEmailAndPassword가 들어갑니다.
     try {
-      setTimeout(() => {
-        toast({ title: "로그인 성공", description: "반가워요!" });
-        router.push('/dashboard');
-      }, 1000);
-    } catch (error) {
-      toast({ title: "로그인 실패", description: "아이디 또는 비밀번호를 확인해주세요.", variant: "destructive" });
+      await signInWithEmailAndPassword(auth, email, password);
+      toast({ title: "로그인 성공", description: "반가워요! 오늘의 말씀을 묵상해볼까요?" });
+      router.push('/dashboard');
+    } catch (error: any) {
+      console.error("로그인 실패:", error);
+      let message = "아이디 또는 비밀번호를 확인해주세요.";
+      if (error.code === 'auth/user-not-found') message = "가입되지 않은 이메일입니다.";
+      if (error.code === 'auth/wrong-password') message = "비밀번호가 일치하지 않습니다.";
+      
+      toast({ title: "로그인 실패", description: message, variant: "destructive" });
       setLoading(false);
     }
   };
@@ -41,7 +48,6 @@ export default function LoginPage() {
       <div className="w-full max-w-[440px] px-6">
         <Card className="border-none shadow-[0_20px_50px_rgba(0,0,0,0.1)] rounded-[40px] overflow-hidden bg-white/95 backdrop-blur-sm">
           <CardContent className="pt-16 pb-12 px-10 space-y-10">
-            {/* Header */}
             <div className="text-center space-y-2">
               <h1 className="text-4xl font-black tracking-tight text-[#C026D3]">
                 예본TeenQT
@@ -51,12 +57,11 @@ export default function LoginPage() {
               </p>
             </div>
 
-            {/* Form */}
             <form onSubmit={handleLogin} className="space-y-4">
               <div className="space-y-2">
                 <Input 
                   type="text" 
-                  placeholder="아이디" 
+                  placeholder="아이디 (이메일)" 
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="h-14 bg-[#F8FAFC] border-[#F1F5F9] rounded-2xl px-6 focus-visible:ring-[#C026D3]/20 placeholder:text-gray-300"
@@ -72,7 +77,6 @@ export default function LoginPage() {
                 />
               </div>
 
-              {/* Remember me */}
               <div className="flex items-center space-x-2 pt-1">
                 <Checkbox id="remember" className="border-gray-300 data-[state=checked]:bg-[#C026D3] data-[state=checked]:border-[#C026D3]" />
                 <Label 

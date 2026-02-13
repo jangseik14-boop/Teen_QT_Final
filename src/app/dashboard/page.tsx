@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -7,11 +8,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { 
   BookOpen, 
   Star, 
-  PartyPopper, 
   Trophy, 
   ShoppingBag, 
   User, 
-  ChevronRight,
   BookMarked,
   Sparkles,
   Loader2,
@@ -29,7 +28,6 @@ export default function DashboardPage() {
   const { user } = useUser();
   const firestore = useFirestore();
   
-  // 입력 상태
   const [reflection, setReflection] = useState("");
   const [resolution, setResolution] = useState("");
   const [prayer, setPrayer] = useState("");
@@ -69,15 +67,16 @@ export default function DashboardPage() {
       }
     };
     fetchAI();
-  }, []);
+  }, [aiContent, currentVerse.ref, currentVerse.text]);
 
   const handleComplete = () => {
     if (!user || !userRef || !meditationRef) return;
     
-    if (reflection.length < 10 || resolution.length < 10 || prayer.length < 10) {
+    // 유효성 검사: 10자 미만일 경우 에러 메시지
+    if (reflection.trim().length < 10 || resolution.trim().length < 10 || prayer.trim().length < 10) {
       toast({ 
         title: "조금 더 정성을 들여볼까요?", 
-        description: "각 항목을 최소 10자 이상 작성해주세요!", 
+        description: "각 항목을 최소 10자 이상 채워주세요!", 
         variant: "destructive" 
       });
       return;
@@ -88,6 +87,7 @@ export default function DashboardPage() {
       return;
     }
 
+    // Firestore에 묵상 데이터 저장
     setDocumentNonBlocking(meditationRef, {
       completedAt: new Date().toISOString(),
       reflection,
@@ -96,6 +96,7 @@ export default function DashboardPage() {
       verse: currentVerse.ref
     }, { merge: true });
 
+    // 포인트 지급 (50D)
     updateDocumentNonBlocking(userRef, {
       points: points + 50,
       updatedAt: new Date().toISOString()
@@ -103,7 +104,7 @@ export default function DashboardPage() {
 
     toast({ 
       title: "묵상 완료! 🎉", 
-      description: "50달란트(D)가 지급되었습니다. 참 잘했어요!",
+      description: "50달란트(D)가 적립되었습니다. 참 잘했어요!",
     });
     
     setReflection("");
@@ -128,7 +129,7 @@ export default function DashboardPage() {
         </div>
       </header>
 
-      <div className="px-5 space-y-6 overflow-y-auto max-h-[calc(100vh-180px)] pb-10">
+      <div className="px-5 space-y-6 overflow-y-auto max-h-[calc(100vh-180px)] pb-10 scrollbar-hide">
         <Card className="border-none bg-[#EEF2FF] rounded-[2rem] overflow-hidden">
           <CardContent className="p-8 space-y-3">
             <p className="text-[#6366F1] font-bold text-sm">{todayStr}</p>
@@ -150,7 +151,7 @@ export default function DashboardPage() {
           <div className="flex items-center gap-2 px-1">
             <div className="w-1.5 h-6 bg-[#EC4899] rounded-full" />
             <h3 className="font-black text-lg text-gray-800 italic flex items-center gap-2">
-              말씀 해설 <Sparkles className="w-4 h-4 text-accent" />
+              말씀 해설 <Sparkles className="w-4 h-4 text-[#22C3C3]" />
             </h3>
           </div>
           <Card className="border-none bg-[#FDF2F8] rounded-[2rem]">
@@ -179,7 +180,6 @@ export default function DashboardPage() {
         ) : (
           <div className="space-y-6">
             <Card className="border-none bg-[#FFFBEB] rounded-[2.5rem] p-7 space-y-8">
-              {/* 묵상하기 (Q1) */}
               <div className="space-y-4">
                 <div className="space-y-1">
                   <h3 className="font-black text-lg text-[#92400E]">묵상하기</h3>
@@ -197,12 +197,11 @@ export default function DashboardPage() {
 
               <div className="h-px bg-yellow-200/50" />
 
-              {/* 결단 및 다짐 (Q2) */}
               <div className="space-y-4">
                 <div className="space-y-1">
                   <h3 className="font-black text-lg text-[#92400E]">결단 및 다짐</h3>
                   <p className="text-[#B45309] text-sm font-bold leading-relaxed">
-                    {isGenerating ? "다짐을 생각 중..." : `Q2. ${aiContent?.q2 || "내 실수보다 훨씬 더 크고 무한한 하나님의 용서를 의지하며, 매일 새롭게 다시 시작해 보세요."}`}
+                    {isGenerating ? "다짐을 생각 중..." : `Q2. ${aiContent?.q2 || "오늘 하루 무엇을 실천해보고 싶나요?"}`}
                   </p>
                 </div>
                 <Textarea 
@@ -214,7 +213,6 @@ export default function DashboardPage() {
               </div>
             </Card>
 
-            {/* 기도하기 */}
             <Card className="border-none bg-[#F5F3FF] rounded-[2.5rem] p-7 space-y-4">
               <h3 className="font-black text-lg text-[#5B21B6]">기도하기</h3>
               <Textarea 
