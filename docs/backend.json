@@ -1,0 +1,167 @@
+{
+  "entities": {
+    "UserProfile": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "UserProfile",
+      "type": "object",
+      "description": "Represents a user's profile information within the WebCanvas application, excluding authentication details. This profile stores public and contact information.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the UserProfile entity."
+        },
+        "displayName": {
+          "type": "string",
+          "description": "The user's public display name used across the application."
+        },
+        "email": {
+          "type": "string",
+          "description": "The user's email address, primarily for communication and identification purposes within the app (not for direct authentication).",
+          "format": "email"
+        },
+        "profilePictureUrl": {
+          "type": "string",
+          "description": "URL to the user's profile picture or avatar.",
+          "format": "uri"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp indicating when the user profile was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp indicating when the user profile was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "displayName",
+        "email",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "Content": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Content",
+      "type": "object",
+      "description": "Represents a piece of web content (e.g., article, page, post) created, edited, and published by a user within WebCanvas.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Content entity."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to the UserProfile who created this content. (Relationship: UserProfile 1:N Content)"
+        },
+        "title": {
+          "type": "string",
+          "description": "The title of the web content."
+        },
+        "body": {
+          "type": "string",
+          "description": "The main textual and HTML content of the web page or article."
+        },
+        "thumbnailUrl": {
+          "type": "string",
+          "description": "Optional URL for a thumbnail image associated with the content, used for previews.",
+          "format": "uri"
+        },
+        "status": {
+          "type": "string",
+          "description": "The current publication status of the content (e.g., 'draft', 'published', 'archived')."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp indicating when the content was first created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp indicating when the content was last updated.",
+          "format": "date-time"
+        },
+        "publishedAt": {
+          "type": "string",
+          "description": "Timestamp indicating when the content was published. This field will be null if the content is not yet published.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "title",
+        "body",
+        "status",
+        "createdAt",
+        "updatedAt"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "UserProfile",
+          "schema": {
+            "$ref": "#/backend/entities/UserProfile"
+          },
+          "description": "Stores a specific user's public profile information. The document ID (`userId`) must match the user's authentication UID. This supports path-based ownership for simple security rules. Includes denormalized 'id' field which should match the document ID and `request.auth.uid` for authorization independence.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user, matching their Firebase Authentication UID."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/contents/{contentId}",
+        "definition": {
+          "entityName": "Content",
+          "schema": {
+            "$ref": "#/backend/entities/Content"
+          },
+          "description": "Stores all content owned by a specific user, regardless of its publication status (draft, published, archived). This is the primary location for content creation, editing, and deletion by the owner. Includes denormalized 'userId' field for authorization independence, which must match the parent collection's 'userId' and `request.auth.uid`.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the content owner, matching their Firebase Authentication UID."
+            },
+            {
+              "name": "contentId",
+              "description": "The unique identifier for a specific piece of web content."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/publishedContents/{contentId}",
+        "definition": {
+          "entityName": "Content",
+          "schema": {
+            "$ref": "#/backend/entities/Content"
+          },
+          "description": "A top-level collection storing a read-only projection of content documents that have been explicitly published. This collection is publicly readable and serves as the data source for the dynamic homepage or content feed. It includes denormalized 'userId' and 'status: published' for Authorization Independence and QAP compliance. Writes to this collection should typically be managed by a trusted backend service (e.g., Cloud Function) when a user publishes content.",
+          "params": [
+            {
+              "name": "contentId",
+              "description": "The unique identifier for a specific published piece of web content."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The proposed Firestore structure prioritizes Authorization Independence and Query Access Patterns (QAPs) through judicious use of path-based ownership and strategic denormalization and segregation. \n\n1.  **User Profiles (`/users/{userId}`):** User profiles are stored directly under `/users/{userId}`, where `{userId}` directly corresponds to `request.auth.uid`. This adheres to the 'Private Data' access model and 'Hierarchical Paths for User-Owned Data'. Authorization rules are extremely simple: `allow read, update, delete: if request.auth.uid == userId;` and `allow create: if request.auth.uid != null && request.resource.data.id == request.auth.uid;`. This structure ensures Authorization Independence as no `get()` calls are required to verify ownership.\n\n2.  **User-Owned Content (`/users/{userId}/contents/{contentId}`):** All content created by a user, regardless of its publication status (draft, published, archived), is stored within a subcollection under their profile: `/users/{userId}/contents/{contentId}`. This continues the hierarchical path structure for user-owned data. Each `Content` document includes a `userId` field which, while redundant with the path for ownership validation, aids in certain client-side queries and integrity checks. This primary location is where users create, edit, and manage their content. Authorization rules again leverage path-based ownership: `allow read, write: if request.auth.uid == userId;`. This again ensures Authorization Independence, as the owner's UID is part of the path, eliminating any need for `get()` calls.\n\n3.  **Publicly Published Content (`/publishedContents/{contentId}`):** To address the core requirement of 'Content Publishing & Display' where published content is 'accessible to visitors' (QAPs), a dedicated top-level collection, `/publishedContents/{contentId}`, is introduced. This collection acts as a *projection* or *mirror* of content documents that have a `status: 'published'` from the user's private `contents` collection. This strategy employs 'Structural Segregation' by separating publicly readable data from privately managed data. For Authorization Independence and QAP compliance, each document in `/publishedContents` *must* include the original `userId` (owner) from the source document and implicitly maintain `status: 'published'`. This denormalization allows rules to be simple: `allow read: if true;` (or `if auth != null` for logged-in only). This completely eliminates `get()` calls for public access and allows efficient `list` queries for public content without filtering or complex security rules. A Cloud Function (or similar backend logic) would be responsible for synchronizing content from `/users/{userId}/contents/{contentId}` to `/publishedContents/{contentId}` when its `status` changes to 'published' or from 'published', ensuring data consistency and integrity across segregated collections."
+  }
+}

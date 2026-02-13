@@ -1,0 +1,91 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    /**
+     * WEB CANVAS SECURITY RULES - PROTOTYPING PHASE
+     * 
+     * CORE PHILOSOPHY:
+     * This ruleset implements a strict Path-Based Ownership model to ensure high security 
+     * with zero performance overhead (Authorization Independence). By nesting user data 
+     * under /users/{userId}, we eliminate the need for expensive get() calls or complex 
+     * collection-group queries.
+     * 
+     * DATA STRUCTURE:
+     * - /users/{userId}: Private profile data.
+     * - /users/{userId}/contents/{contentId}: Private workspace for drafts and managed content.
+     * - /publishedContents/{contentId}: Public read-only projection of published works.
+     * 
+     * KEY DECISIONS:
+     * 1. Path-Based Authorization: The user's UID must match the document path for all private data.
+     * 2. Structural Segregation: Published content is mirrored to a top-level collection to 
+     *    allow public "list" operations without exposing private drafts.
+     * 3. Relational Integrity: On creation, documents must include a field (e.g., userId) 
+     *    that matches the path and the authenticated user to ensure data remains queryable.
+     * 4. Flexible Schema: For rapid prototyping, only relational/identity fields are validated. 
+     *    Content fields (titles, bodies) are not type-checked.
+     */
+
+    // --- GLOBAL HELPER FUNCTIONS ---
+
+    /** @description Checks if the request is from a signed-in user. */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /** @description Checks if the authenticated user's UID matches the provided userId. */
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    /** @description Checks if the document exists and the current user is the owner. */
+    function isExistingOwner(userId) {
+      return resource != null && isOwner(userId);
+    }
+
+    // --- COLLECTION RULES ---
+
+    /**
+     * @description Rules for UserProfile documents. Restricts access to the profile owner.
+     * @path /users/{userId}
+     * @allow get: (isOwner('user_123'))
+     * @deny create: (auth.uid 'user_456' trying to create for 'user_123')
+     * @principle Pattern 4 (Self-Creation) + Pattern 1 (Ownership).
+     */
+    match /users/{userId} {
+      allow get, list: if isOwner(userId);
+      allow create: if isOwner(userId) && request.resource.data.id == userId;
+      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
+      allow delete: if isExistingOwner(userId);
+
+      /**
+       * @description Rules for a user's private content (drafts, published, archived).
+       * @path /users/{userId}/contents/{contentId}
+       * @allow create: (isOwner('user_123') and userId field matches)
+       * @deny update: (trying to change the userId field)
+       * @principle Pattern 1 (Ownership). Enforces path-consistent userId for relational integrity.
+       */
+      match /contents/{contentId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && request.resource.data.userId == userId;
+        allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
+        allow delete: if isExistingOwner(userId);
+      }
+    }
+
+    /**
+     * @description Publicly readable collection for content that has been published.
+     * @path /publishedContents/{contentId}
+     * @allow get, list: (true)
+     * @deny create, update, delete: (any user - managed by backend service)
+     * @principle Structural Segregation. Public read access with locked-down writes to ensure 
+     *            content only appears here via trusted system processes (e.g. Cloud Functions).
+     */
+    match /publishedContents/{contentId} {
+      allow get, list: if true;
+      // CRITICAL: Per reasoning, this is a read-only projection for clients. 
+      // User-driven modifications must occur in their private /users/{userId}/contents/ collection.
+      allow create, update, delete: if false;
+    }
+  }
+}
