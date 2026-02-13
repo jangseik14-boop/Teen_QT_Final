@@ -49,7 +49,6 @@ export default function RegisterPage() {
       await updateProfile(user, { displayName: formData.name });
 
       // 3. Firestore에 사용자 상세 프로필 저장
-      // Auth 생성 직후 세션이 잡히므로 rules의 isOwner 조건 충족 가능
       await setDoc(doc(firestore, "users", user.uid), {
         id: user.uid,
         displayName: formData.name,
@@ -68,11 +67,9 @@ export default function RegisterPage() {
       console.error("가입 실패 상세:", error);
       let message = "회원가입 중 오류가 발생했습니다.";
       
-      // 구체적인 에러 메시지 처리
       if (error.code === 'auth/email-already-in-use') message = "이미 가입된 이메일입니다.";
       if (error.code === 'auth/invalid-email') message = "이메일 형식이 올바르지 않습니다.";
-      if (error.code === 'auth/operation-not-allowed') message = "Firebase에서 이메일 로그인이 비활성화되어 있습니다. 관리자에게 문의하세요.";
-      if (error.code === 'permission-denied') message = "데이터 저장 권한이 없습니다. 잠시 후 다시 시도해주세요.";
+      if (error.code === 'permission-denied') message = "데이터베이스 저장 권한이 없습니다. Firebase 설정을 확인해주세요.";
       
       toast({ title: "가입 실패", description: message, variant: "destructive" });
       setLoading(false);
@@ -80,7 +77,7 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-[#E0E7FF] via-[#FCE7F3] to-[#E0E7FF] py-10">
+    <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-[#F0F7FF] via-[#E0F2FE] to-[#F0F7FF] py-10">
       <div className="w-full max-w-[440px] px-6">
         <Card className="border-none shadow-[0_20px_50px_rgba(0,0,0,0.1)] rounded-[40px] overflow-hidden bg-white/95 backdrop-blur-sm">
           <CardContent className="pt-16 pb-12 px-10 space-y-8">
