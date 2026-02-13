@@ -3,7 +3,7 @@ import { getApp, getApps, initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
-// 환경 변수 및 하드코딩된 설정을 통합하여 안정성 확보
+// Firebase 설정값
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "", 
   authDomain: "studio-5290180250-baff5.firebaseapp.com",
@@ -15,28 +15,25 @@ const firebaseConfig = {
 
 function getSdks(firebaseApp: any) {
   if (!firebaseApp) {
-    return {
-      firebaseApp: null as any,
-      auth: null as any,
-      firestore: null as any,
-    };
+    return { firebaseApp: null, auth: null, firestore: null };
   }
-  return {
-    firebaseApp,
-    auth: getAuth(firebaseApp),
-    firestore: getFirestore(firebaseApp),
-  };
+  
+  try {
+    return {
+      firebaseApp,
+      auth: getAuth(firebaseApp),
+      firestore: getFirestore(firebaseApp),
+    };
+  } catch (error) {
+    console.error("SDK 초기화 실패:", error);
+    return { firebaseApp: null, auth: null, firestore: null };
+  }
 }
 
-// 초기화 로직 강화: 서버 사이드에서도 빈 객체를 반환하여 훅 충돌 방지
 export function initializeFirebase() {
+  // SSR 환경에서는 초기화 건너뜀
   if (typeof window === "undefined") {
-    // 서버 사이드에서는 더미 객체를 반환하여 초기 렌더링 시 크래시 방지
-    return {
-      firebaseApp: {} as any,
-      auth: {} as any,
-      firestore: {} as any,
-    };
+    return { firebaseApp: null, auth: null, firestore: null };
   }
 
   try {
@@ -44,14 +41,22 @@ export function initializeFirebase() {
       return getSdks(getApp());
     }
 
-    if (!firebaseConfig.apiKey) {
-      console.warn("⚠️ Firebase API Key is missing. Check Netlify Environment Variables.");
+    // API Key가 유효하지 않으면 초기화를 시도하지 않음 (invalid-api-key 에러 방지)
+    const isKeyValid = firebaseConfig.apiKey && firebaseConfig.apiKey.length > 10;
+    if (!isKeyValid) {
+      return getSdks(null);
     }
 
     const app = initializeApp(firebaseConfig);
     return getSdks(app);
   } catch (error) {
-    console.error("Firebase initialization failed:", error);
+    console.error("Firebase 초기화 중 예외 발생:", error);
     return getSdks(null);
   }
 }
+
+// 명시적인 Hook 내보내기 (Export)
+export * from './provider';
+export * from './non-blocking-updates';
+export * from './firestore/use-doc';
+export * from './firestore/use-collection';

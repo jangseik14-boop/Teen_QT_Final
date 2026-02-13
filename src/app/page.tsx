@@ -24,8 +24,13 @@ export default function LoginPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    const cleanUsername = username.trim();
+    
+    if (!auth || !firestore) {
+      toast({ title: "시스템 오류", description: "Firebase 설정이 완료되지 않았습니다.", variant: "destructive" });
+      return;
+    }
 
+    const cleanUsername = username.trim();
     if (!cleanUsername || !password) {
       toast({ title: "로그인 오류", description: "아이디와 비밀번호를 입력해주세요.", variant: "destructive" });
       return;
@@ -34,7 +39,6 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      // 1. Firestore에서 해당 아이디를 가진 사용자의 실제 로그인 이메일 찾기
       const q = query(collection(firestore, "users"), where("username", "==", cleanUsername));
       const querySnapshot = await getDocs(q);
 
@@ -47,7 +51,6 @@ export default function LoginPage() {
       const userData = querySnapshot.docs[0].data();
       const internalEmail = userData.email;
 
-      // 2. 찾은 내부 이메일로 로그인 진행
       await signInWithEmailAndPassword(auth, internalEmail, password);
       toast({ title: "로그인 성공", description: "반가워요! 오늘의 말씀을 묵상해볼까요?" });
       router.push('/dashboard');
