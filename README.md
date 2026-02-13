@@ -1,34 +1,32 @@
 
-# 🚀 예본TeenQT 클라우드플레어 배포 최종 가이드
+# 🚀 예본TeenQT 클라우드플레어 최종 배포 가이드 (완결판)
 
-이 가이드는 클라우드플레어(Cloudflare Pages) 배포 시 필요한 핵심 설정값들을 담고 있습니다. 배포 화면 옆에 띄워두고 사용하세요!
+클라우드플레어 배포 시 아래 설정값을 **반드시** 업데이트해야 배포에 성공합니다!
 
-### 1️⃣ 환경 변수 설정 (Environment Variables)
-배포 설정의 **[Environment variables]** 섹션에서 아래 3개를 반드시 추가하세요.
+### 1️⃣ 빌드 설정 수정 (Build Settings)
+클라우드플레어 대시보드 [Settings] -> [Build & deployments] 에서 수정하세요.
+
+- **Build command**: `npm run build`
+- **Build output directory**: `.vercel/output/static` (기존 .next에서 이걸로 꼭 바꿔주세요!)
+
+---
+
+### 2️⃣ 환경 변수 설정 (Environment Variables)
+[Settings] -> [Variables and Secrets] 에서 아래 3개를 추가하세요.
 
 | Variable Name | Value | 설명 |
 | :--- | :--- | :--- |
-| `GEMINI_API_KEY` | `AIzaSyC2ArqCoWfqaR45OwCGKTaAeRwSZoVQjvU` | AI 말씀 해설 생성용 |
+| `GEMINI_API_KEY` | `AIzaSyC2ArqCoWfqaR45OwCGKTaAeRwSZoVQjvU` | AI 해설 생성용 |
 | `NEXT_PUBLIC_FIREBASE_PROJECT_ID` | `studio-5290180250-baff5` | 데이터베이스 연결용 |
-| `NODE_VERSION` | `20` | 최신 Node.js 환경 설정 |
+| `NODE_VERSION` | `20` | 빌드 환경 설정 |
 
 ---
 
-### 2️⃣ 호환성 플래그 설정 (Compatibility Flags)
-배포 완료 후, 클라우드플레어 대시보드에서 아래 경로로 이동하여 설정하세요.
-**[Settings] -> [Functions] -> [Compatibility flags]**
+### 3️⃣ 호환성 플래그 (Compatibility Flags)
+[Settings] -> [Functions] -> [Compatibility flags]
 
-- **Production** 섹션에서 **[+ Add flag]** 클릭
-- **`nodejs_compat`** 입력 후 저장
+- **Production** 및 **Preview** 섹션에 **`nodejs_compat`** 플래그 추가 후 저장
 
 ---
 
-### 3️⃣ 빌드 정보
-- **Framework Preset**: `Next.js`
-- **Build Command**: `npm run build`
-- **Output Directory**: `.next`
-- **Next.js Version**: `15.2.3` (보안 패치 완료 버전)
-
----
-
-**고생하셨습니다! 이제 정말 사이트가 열릴 준비가 되었습니다. 🤘**
+**이 설정을 마치고 [Retry build]를 누르면 이제 정말 사이트가 열립니다! 🎉**
