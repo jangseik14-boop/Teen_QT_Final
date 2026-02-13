@@ -21,7 +21,7 @@ import {
 import Link from "next/link";
 import { useUser, useFirestore, useDoc, setDocumentNonBlocking, updateDocumentNonBlocking, useMemoFirebase } from "@/firebase";
 import { doc } from "firebase/firestore";
-import { generateQuiz } from "@/ai/flows/generate-quiz";
+import { getQuizForToday } from "@/lib/daily-quizzes";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
@@ -31,63 +31,32 @@ export default function ActivityPage() {
   const { user } = useUser();
   const firestore = useFirestore();
   const todayId = getTodayId();
+  const currentQuiz = getQuizForToday();
 
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [isSubmitted, setIsSubmitted] = useState(false);
-  const [isGenerating, setIsGenerating] = useState(false);
 
   // 사용자 프로필 참조
   const userRef = useMemoFirebase(() => user ? doc(firestore, "users", user.uid) : null, [user, firestore]);
   const { data: userProfile } = useDoc(userRef);
 
-  // 오늘의 공통 퀴즈 참조 (모든 유저 동일)
-  const globalQuizRef = useMemoFirebase(() => doc(firestore, "dailyQuizzes", todayId), [firestore, todayId]);
-  const { data: dailyQuiz, isLoading: isQuizLoading } = useDoc(globalQuizRef);
-
   // 현재 유저의 퀴즈 참여 기록 참조
   const userActivityRef = useMemoFirebase(() => user ? doc(firestore, `users/${user.uid}/activities/${todayId}`) : null, [user, firestore, todayId]);
-  const { data: userActivity } = useDoc(userActivityRef);
-
-  // 퀴즈가 없으면 생성하여 전역 저장소에 저장하는 로직
-  useEffect(() => {
-    const fetchOrGenerateQuiz = async () => {
-      // 이미 퀴즈가 있거나 생성 중이면 중단
-      if (isQuizLoading || dailyQuiz?.question || isGenerating) return;
-
-      setIsGenerating(true);
-      try {
-        const result = await generateQuiz();
-        if (result && result.question) {
-          // 중앙 저장소에 오늘 날짜의 퀴즈 저장 (최초 1회만 실행됨)
-          setDocumentNonBlocking(globalQuizRef, {
-            ...result,
-            createdAt: new Date().toISOString()
-          }, { merge: true });
-        }
-      } catch (error) {
-        console.error("퀴즈 생성 실패:", error);
-      } finally {
-        setIsGenerating(false);
-      }
-    };
-
-    if (user && !isQuizLoading) {
-      fetchOrGenerateQuiz();
-    }
-  }, [dailyQuiz, isQuizLoading, user, globalQuizRef, isGenerating]);
+  const { data: userActivity, isLoading: isActivityLoading } = useDoc(userActivityRef);
 
   const handleQuizSubmit = () => {
-    if (selectedOption === null || !dailyQuiz || userActivity) return;
+    if (selectedOption === null || !currentQuiz || userActivity) return;
 
     setIsSubmitted(true);
-    const isCorrect = selectedOption === dailyQuiz.correctIndex;
+    const isCorrect = selectedOption === currentQuiz.correctIndex;
 
     // 참여 기록 저장
     setDocumentNonBlocking(userActivityRef!, {
       completedAt: new Date().toISOString(),
       isCorrect,
       selectedOption,
-      rewarded: isCorrect ? 20 : 0
+      rewarded: isCorrect ? 20 : 0,
+      quizId: currentQuiz.id
     }, { merge: true });
 
     if (isCorrect) {
@@ -123,72 +92,65 @@ export default function ActivityPage() {
             <h2 className="text-xl font-black text-gray-800 italic">오늘의 데일리 퀴즈</h2>
           </div>
 
-          {!dailyQuiz && (isGenerating || isQuizLoading) ? (
-            <Card className="border-none shadow-sm rounded-[2rem] bg-white p-10 flex flex-col items-center justify-center gap-4">
-              <Loader2 className="w-10 h-10 animate-spin text-purple-400" />
-              <p className="text-sm font-bold text-gray-400">AI가 오늘의 공통 퀴즈를 만드는 중...</p>
-            </Card>
-          ) : (
-            <Card className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden ring-1 ring-gray-100">
-              <CardContent className="p-8 space-y-6">
-                <div className="bg-purple-50 p-4 rounded-2xl border border-purple-100 relative">
-                  <Sparkles className="absolute -top-2 -right-2 w-6 h-6 text-purple-300 animate-pulse" />
-                  <p className="text-lg font-black text-purple-900 leading-tight">
-                    {dailyQuiz?.question}
+          <Card className="border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden ring-1 ring-gray-100">
+            <CardContent className="p-8 space-y-6">
+              <div className="bg-purple-50 p-4 rounded-2xl border border-purple-100 relative">
+                <Sparkles className="absolute -top-2 -right-2 w-6 h-6 text-purple-300 animate-pulse" />
+                <p className="text-lg font-black text-purple-900 leading-tight">
+                  {currentQuiz.question}
+                </p>
+              </div>
+
+              <div className="space-y-3">
+                {currentQuiz.options.map((option: string, index: number) => {
+                  const isCompleted = !!userActivity || isSubmitted;
+                  const isCorrect = index === currentQuiz.correctIndex;
+                  const isSelected = selectedOption === index || userActivity?.selectedOption === index;
+                  
+                  let variantClass = "bg-gray-50 border-gray-100 text-gray-700";
+                  if (isSelected && !isCompleted) variantClass = "bg-purple-100 border-purple-300 text-purple-700 ring-2 ring-purple-200";
+                  if (isCompleted && isCorrect) variantClass = "bg-green-100 border-green-300 text-green-700 ring-2 ring-green-200";
+                  if (isCompleted && isSelected && !isCorrect) variantClass = "bg-rose-100 border-rose-300 text-rose-700";
+
+                  return (
+                    <button
+                      key={index}
+                      disabled={isCompleted}
+                      onClick={() => setSelectedOption(index)}
+                      className={cn(
+                        "w-full p-4 rounded-2xl border-2 text-left font-bold text-sm transition-all duration-200 flex justify-between items-center group",
+                        variantClass
+                      )}
+                    >
+                      <span>{index + 1}. {option}</span>
+                      {isCompleted && isCorrect && <CheckCircle2 className="w-5 h-5 text-green-500" />}
+                      {isCompleted && isSelected && !isCorrect && <XCircle className="w-5 h-5 text-rose-500" />}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {!(userActivity || isSubmitted) ? (
+                <Button 
+                  onClick={handleQuizSubmit}
+                  disabled={selectedOption === null || isActivityLoading}
+                  className="w-full h-14 rounded-2xl bg-purple-600 hover:bg-purple-700 font-black text-lg shadow-lg shadow-purple-100"
+                >
+                  {isActivityLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : "정답 확인하고 20D 받기"}
+                </Button>
+              ) : (
+                <div className="bg-amber-50 p-5 rounded-2xl border border-amber-100 space-y-2 animate-in fade-in slide-in-from-bottom-4">
+                  <div className="flex items-center gap-2">
+                    <HelpCircle className="w-4 h-4 text-amber-600" />
+                    <p className="text-xs font-black text-amber-700 uppercase tracking-wider">선생님의 해설</p>
+                  </div>
+                  <p className="text-[13px] font-bold text-amber-900 leading-relaxed">
+                    {currentQuiz.explanation}
                   </p>
                 </div>
-
-                <div className="space-y-3">
-                  {dailyQuiz?.options.map((option: string, index: number) => {
-                    const isCompleted = !!userActivity || isSubmitted;
-                    const isCorrect = index === dailyQuiz.correctIndex;
-                    const isSelected = selectedOption === index || userActivity?.selectedOption === index;
-                    
-                    let variantClass = "bg-gray-50 border-gray-100 text-gray-700";
-                    if (isSelected && !isCompleted) variantClass = "bg-purple-100 border-purple-300 text-purple-700 ring-2 ring-purple-200";
-                    if (isCompleted && isCorrect) variantClass = "bg-green-100 border-green-300 text-green-700 ring-2 ring-green-200";
-                    if (isCompleted && isSelected && !isCorrect) variantClass = "bg-rose-100 border-rose-300 text-rose-700";
-
-                    return (
-                      <button
-                        key={index}
-                        disabled={isCompleted}
-                        onClick={() => setSelectedOption(index)}
-                        className={cn(
-                          "w-full p-4 rounded-2xl border-2 text-left font-bold text-sm transition-all duration-200 flex justify-between items-center group",
-                          variantClass
-                        )}
-                      >
-                        <span>{index + 1}. {option}</span>
-                        {isCompleted && isCorrect && <CheckCircle2 className="w-5 h-5 text-green-500" />}
-                        {isCompleted && isSelected && !isCorrect && <XCircle className="w-5 h-5 text-rose-500" />}
-                      </button>
-                    );
-                  })}
-                </div>
-
-                {!(userActivity || isSubmitted) ? (
-                  <Button 
-                    onClick={handleQuizSubmit}
-                    disabled={selectedOption === null}
-                    className="w-full h-14 rounded-2xl bg-purple-600 hover:bg-purple-700 font-black text-lg shadow-lg shadow-purple-100"
-                  >
-                    정답 확인하고 20D 받기
-                  </Button>
-                ) : (
-                  <div className="bg-amber-50 p-5 rounded-2xl border border-amber-100 space-y-2 animate-in fade-in slide-in-from-bottom-4">
-                    <div className="flex items-center gap-2">
-                      <HelpCircle className="w-4 h-4 text-amber-600" />
-                      <p className="text-xs font-black text-amber-700 uppercase tracking-wider">선생님의 해설</p>
-                    </div>
-                    <p className="text-[13px] font-bold text-amber-900 leading-relaxed">
-                      {dailyQuiz?.explanation}
-                    </p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          )}
+              )}
+            </CardContent>
+          </Card>
         </div>
 
         <div className="space-y-4 pb-10">
