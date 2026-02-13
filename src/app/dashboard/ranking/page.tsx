@@ -30,14 +30,21 @@ export default function RankingPage() {
   const userRef = useMemoFirebase(() => user ? doc(firestore, "users", user.uid) : null, [user, firestore]);
   const { data: userProfile } = useDoc(userRef);
 
-  // 누적 포인트(totalPoints) 기준 상위 5명 가져오기
+  // 누적 포인트(totalPoints) 기준 랭킹 산정을 위해 모든 사용자 가져오기
+  // (특정 필드가 없는 사용자가 누락되는 것을 방지하기 위해 정렬 없이 가져옴)
   const rankingQuery = useMemoFirebase(() => query(
-    collection(firestore, "users"),
-    orderBy("totalPoints", "desc"),
-    limit(5)
+    collection(firestore, "users")
   ), [firestore]);
 
-  const { data: topUsers, isLoading } = useCollection(rankingQuery);
+  const { data: rawUsers, isLoading } = useCollection(rankingQuery);
+
+  // 메모리에서 정렬하여 상위 5명 추출
+  const topUsers = useMemo(() => {
+    if (!rawUsers) return null;
+    return [...rawUsers]
+      .sort((a, b) => (b.totalPoints || 0) - (a.totalPoints || 0))
+      .slice(0, 5);
+  }, [rawUsers]);
 
   const roleLabels: Record<string, string> = {
     pastor: "교역자",

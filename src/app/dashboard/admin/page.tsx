@@ -42,13 +42,18 @@ export default function AdminDashboardPage() {
   const [editTotalPoints, setEditTotalPoints] = useState<number>(0);
   const [isManageOpen, setIsManageOpen] = useState(false);
 
-  // 모든 사용자 가져오기
+  // 모든 사용자 가져오기 (필드 누락자 방지를 위해 정렬 없이 가져옴)
   const usersQuery = useMemoFirebase(() => query(
-    collection(firestore, "users"),
-    orderBy("totalPoints", "desc")
+    collection(firestore, "users")
   ), [firestore]);
 
-  const { data: allUsers, isLoading } = useCollection(usersQuery);
+  const { data: rawUsers, isLoading } = useCollection(usersQuery);
+
+  // 메모리에서 누적 포인트 순으로 정렬
+  const allUsers = useMemo(() => {
+    if (!rawUsers) return null;
+    return [...rawUsers].sort((a, b) => (b.totalPoints || 0) - (a.totalPoints || 0));
+  }, [rawUsers]);
 
   // 선택된 사용자의 묵상 기록 가져오기
   const meditationQuery = useMemoFirebase(() => selectedUser ? query(
