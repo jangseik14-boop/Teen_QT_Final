@@ -8,7 +8,7 @@ import { toast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import Link from 'next/link';
 
-// 데이터 변수들을 전역 스코프로 정의 (컴포넌트 외부)
+// 데이터 변수들을 컴포넌트 외부(전역 스코프)로 이동
 const qtDatabase = [
   { 
     id: "qt-1", 
