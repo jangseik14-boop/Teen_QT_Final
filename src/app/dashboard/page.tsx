@@ -295,6 +295,10 @@ export default function DashboardPage() {
           <BookOpen className="w-6 h-6 text-[#C026D3]" />
           <span className="text-[11px] font-black text-[#C026D3]">QT</span>
         </Link>
+        <div className="flex flex-col items-center gap-1 group text-gray-400">
+          <Calendar className="w-6 h-6" />
+          <span className="text-[11px] font-bold">이벤트</span>
+        </div>
         <Link href="/dashboard/ranking" className="flex flex-col items-center gap-1 group text-gray-400 hover:text-[#C026D3] transition-colors">
           <Trophy className="w-6 h-6" />
           <span className="text-[11px] font-bold">랭킹</span>
