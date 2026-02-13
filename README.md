@@ -8,12 +8,13 @@
 
 1.  Firebase 콘솔의 **App Hosting** 메뉴로 이동합니다.
 2.  생성된 백엔드(`teen-qt-backend`)를 클릭합니다.
-3.  상단 탭에서 **Settings (설정)**를 선택합니다.
-4.  **Environment variables (환경 변수)** 섹션에서 **[Add variable]**을 클릭합니다.
-5.  아래 정보를 입력하고 저장하세요:
+3.  상단 탭에서 **Settings (설정)**를 선택하고 왼쪽 메뉴에서 **환경 (Environment)**을 누릅니다.
+4.  **환경 이름** 칸에 `prod` 라고 입력하고 **[저장]**을 누릅니다.
+5.  이제 나타나는 **Environment variables (환경 변수)** 섹션에서 **[Add variable]**을 클릭합니다.
+6.  아래 정보를 입력하고 저장하세요:
     *   **이름**: `GEMINI_API_KEY`
     *   **값**: Google AI Studio에서 발급받은 API 키
-6.  저장 후, 설정이 적용되도록 잠시 기다리거나 다시 배포를 누르시면 됩니다.
+7.  저장 후, 설정이 적용되도록 잠시 기다리거나 다시 배포를 누르시면 됩니다.
 
 ## 2. 학생들에게 주소 공유하기
 - 배포가 성공하면 App Hosting 대시보드 상단에 `https://...hosted.app`으로 끝나는 주소가 생깁니다.
