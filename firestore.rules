@@ -20,11 +20,11 @@ service cloud.firestore {
 
     // 사용자 프로필 및 개인 기록
     match /users/{userId} {
-      allow get, create, update: if isOwner(userId);
-      
-      // 관리자는 목록 조회, 수정, 삭제 가능
-      allow list: if isSignedIn();
-      allow update, delete: if isAdmin();
+      // 가입 시 중복 체크 및 로그인 시 정보 조회를 위해 read(get, list) 허용
+      allow get, list: if true;
+      allow create: if isSignedIn() && request.auth.uid == userId;
+      allow update: if isOwner(userId) || isAdmin();
+      allow delete: if isAdmin();
       
       // 개인 묵상 기록
       match /meditations/{meditationId} {

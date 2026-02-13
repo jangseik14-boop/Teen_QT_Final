@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState } from 'react';
@@ -28,14 +27,6 @@ export default function RegisterPage() {
     password: ''
   });
 
-  const encodeUsername = (str: string) => {
-    const encoder = new TextEncoder();
-    const bytes = encoder.encode(str);
-    return Array.from(bytes)
-      .map(b => b.toString(16).padStart(2, '0'))
-      .join('');
-  };
-
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     const cleanUsername = formData.username.trim();
@@ -53,7 +44,7 @@ export default function RegisterPage() {
     setLoading(true);
     
     try {
-      // 1. 아이디 중복 확인
+      // 1. 아이디 중복 확인 (보안 규칙 수정으로 이제 로그인 전에도 가능)
       const q = query(collection(firestore, "users"), where("username", "==", cleanUsername));
       const querySnapshot = await getDocs(q);
       
@@ -63,9 +54,9 @@ export default function RegisterPage() {
         return;
       }
 
-      // 2. 고유 내부 이메일 생성 (탈퇴 후 재가입을 가능하게 하기 위해 타임스탬프 포함)
-      const encodedId = encodeUsername(cleanUsername);
-      const internalEmail = `${encodedId}-${Date.now()}@yebon.teen`;
+      // 2. 고유 내부 이메일 생성 (재가입이 가능하도록 랜덤 문자열 조합)
+      const randomId = Math.random().toString(36).substring(2, 10);
+      const internalEmail = `user-${randomId}-${Date.now()}@yebon.teen`;
 
       const userCredential = await createUserWithEmailAndPassword(auth, internalEmail, formData.password);
       const user = userCredential.user;
@@ -77,7 +68,7 @@ export default function RegisterPage() {
         id: user.uid,
         username: cleanUsername,
         displayName: formData.name,
-        email: internalEmail, // 로그인 시 참조할 이메일
+        email: internalEmail,
         role: formData.role,
         gender: formData.gender,
         phone: formData.phone,
@@ -92,6 +83,8 @@ export default function RegisterPage() {
       console.error("가입 실패 상세:", error);
       let message = "회원가입 중 오류가 발생했습니다.";
       if (error.code === 'auth/email-already-in-use') message = "시스템 오류가 발생했습니다. 잠시 후 다시 시도해주세요.";
+      if (error.code === 'auth/invalid-email') message = "아이디 형식이 올바르지 않습니다.";
+      
       toast({ title: "가입 실패", description: message, variant: "destructive" });
       setLoading(false);
     }
