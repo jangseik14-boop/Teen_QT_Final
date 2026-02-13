@@ -28,7 +28,6 @@ import { getVerseForToday } from "@/lib/bible-verses";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 
-// 오늘 날짜 ID 생성 (YYYY-MM-DD)
 const getTodayId = () => new Date().toISOString().split('T')[0];
 
 export default function DashboardPage() {
@@ -43,26 +42,29 @@ export default function DashboardPage() {
   const todayId = getTodayId();
   const currentVerse = getVerseForToday();
 
-  // 1. 사용자 정보 및 포인트 가져오기
   const userRef = useMemoFirebase(() => user ? doc(firestore, "users", user.uid) : null, [user, firestore]);
   const { data: userProfile } = useDoc(userRef);
 
-  // 2. 사용자의 오늘 묵상 완료 여부 확인
   const userMeditationRef = useMemoFirebase(() => user ? doc(firestore, `users/${user.uid}/meditations/${todayId}`) : null, [user, firestore, todayId]);
   const { data: todayUserMeditation } = useDoc(userMeditationRef);
 
-  // 3. 전역 공유 묵상 데이터 가져오기 (dailyMeditations 컬렉션)
   const globalMeditationRef = useMemoFirebase(() => doc(firestore, "dailyMeditations", todayId), [firestore, todayId]);
   const { data: globalMeditation, isLoading: isGlobalLoading } = useDoc(globalMeditationRef);
 
-  // 4. AI 해설 자동 생성 및 저장 로직
+  // 로컬 프리셋이 있으면 즉시 표시하고, 없으면 AI 생성을 기다림
+  const displayCommentary = globalMeditation?.commentary || currentVerse.preDefined?.commentary;
+  const displayQ1 = globalMeditation?.q1 || currentVerse.preDefined?.q1;
+  const displayQ2 = globalMeditation?.q2 || currentVerse.preDefined?.q2;
+
   useEffect(() => {
     const fetchOrGenerateAI = async () => {
+      // 이미 글로벌 데이터가 있으면 중단 (고정값 유지)
       if (isGlobalLoading || globalMeditation?.commentary || isGenerating) return;
 
       setIsGenerating(true);
       try {
         if (currentVerse.preDefined) {
+          // 프리셋 데이터가 있다면 공통 DB에 바로 저장하여 모든 학생이 공유하게 함
           setDocumentNonBlocking(globalMeditationRef, {
             ...currentVerse.preDefined,
             verse: currentVerse.ref,
@@ -70,6 +72,7 @@ export default function DashboardPage() {
             createdAt: new Date().toISOString()
           }, { merge: true });
         } else {
+          // 프리셋이 없으면 AI가 생성하여 저장 (첫 방문자 1회만 수행)
           const result = await generateMeditation({
             verse: currentVerse.ref,
             verseText: currentVerse.text
@@ -85,7 +88,7 @@ export default function DashboardPage() {
           }
         }
       } catch (error) {
-        console.error("AI 생성 실패:", error);
+        console.error("콘텐츠 생성 실패:", error);
       } finally {
         setIsGenerating(false);
       }
@@ -99,7 +102,6 @@ export default function DashboardPage() {
   const handleComplete = () => {
     if (!user || !userRef || !userMeditationRef) return;
     
-    // Q1, Q2는 20자 이상, 기도는 10자 이상 체크
     if (reflection.trim().length < 20 || resolution.trim().length < 20 || prayer.trim().length < 10) {
       toast({ 
         title: "조금 더 정성을 들여볼까요?", 
@@ -165,7 +167,6 @@ export default function DashboardPage() {
       </header>
 
       <div className="px-5 space-y-6 pt-6 pb-10">
-        {/* 말씀 카드 */}
         <Card className="border-2 border-blue-300 bg-white rounded-[2.5rem] overflow-hidden shadow-md">
           <CardContent className="p-8 space-y-3">
             <div className="flex items-center gap-2 text-[#6366F1] mb-1">
@@ -180,14 +181,12 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        {/* 말씀 텍스트 카드 */}
         <Card className="border-2 border-sky-300 bg-[#F0F9FF] rounded-[2.5rem] shadow-md">
           <CardContent className="p-8 text-center italic text-[#0369A1] font-bold text-lg leading-relaxed">
             "{currentVerse.text}"
           </CardContent>
         </Card>
 
-        {/* 말씀 해설 섹션 */}
         <div className="space-y-3">
           <div className="flex items-center gap-2 px-1">
             <div className="w-1.5 h-6 bg-[#EC4899] rounded-full" />
@@ -197,14 +196,14 @@ export default function DashboardPage() {
           </div>
           <Card className="border-2 border-pink-200 bg-[#FFF1F2] rounded-[2.5rem] shadow-md overflow-hidden">
             <CardContent className="p-7 text-gray-700 font-medium leading-relaxed text-[15px]">
-              {isGenerating || isGlobalLoading ? (
+              {!displayCommentary && (isGenerating || isGlobalLoading) ? (
                 <div className="flex flex-col items-center justify-center py-6 gap-3 text-muted-foreground animate-pulse">
                   <Loader2 className="w-8 h-8 animate-spin text-pink-400" /> 
                   <span className="font-bold text-sm text-pink-400">말씀을 힙하게 해석하는 중...</span>
                 </div>
               ) : (
                 <div className="whitespace-pre-wrap leading-[1.6]">
-                  {globalMeditation?.commentary || "오늘의 말씀을 통해 하나님의 사랑을 듬뿍 느껴보세요! 잠시 후 해설이 나타납니다."}
+                  {displayCommentary || "오늘의 말씀을 통해 하나님의 사랑을 느껴보세요!"}
                 </div>
               )}
             </CardContent>
@@ -225,7 +224,6 @@ export default function DashboardPage() {
           </div>
         ) : (
           <div className="space-y-8">
-            {/* 말씀 묵상 섹션 (Q1, Q2) */}
             <div className="space-y-3">
               <div className="flex items-center justify-between px-1">
                 <div className="flex items-center gap-2">
@@ -237,10 +235,9 @@ export default function DashboardPage() {
               </div>
               <Card className="border-2 border-amber-200 bg-[#FFFBEB] rounded-[2.5rem] shadow-md overflow-hidden">
                 <CardContent className="p-7 space-y-6">
-                  {/* Q1 섹션 */}
                   <div className="space-y-3">
                     <p className="text-[#92400E] font-black text-[15px] leading-snug px-1">
-                      {isGenerating || isGlobalLoading ? "질문을 생각 중..." : `Q1. ${globalMeditation?.q1 || "말씀을 통해 느낀 점을 적어보세요."}`}
+                      {!displayQ1 && (isGenerating || isGlobalLoading) ? "질문을 생각 중..." : `Q1. ${displayQ1 || "말씀을 통해 느낀 점을 적어보세요."}`}
                     </p>
                     <div className="relative">
                       <div className="absolute top-3 right-3 z-10">
@@ -257,10 +254,9 @@ export default function DashboardPage() {
 
                   <Separator className="bg-amber-100" />
 
-                  {/* Q2 섹션 */}
                   <div className="space-y-3">
                     <p className="text-[#92400E] font-black text-[15px] leading-snug px-1">
-                      {isGenerating || isGlobalLoading ? "다짐을 생각 중..." : `Q2. ${globalMeditation?.q2 || "오늘 하루 무엇을 실천하고 싶나요?"}`}
+                      {!displayQ2 && (isGenerating || isGlobalLoading) ? "다짐을 생각 중..." : `Q2. ${displayQ2 || "오늘 하루 무엇을 실천하고 싶나요?"}`}
                     </p>
                     <div className="relative">
                       <div className="absolute top-3 right-3 z-10">
@@ -278,7 +274,6 @@ export default function DashboardPage() {
               </Card>
             </div>
 
-            {/* 기도 섹션 */}
             <div className="space-y-3">
               <div className="flex items-center justify-between px-1">
                 <div className="flex items-center gap-2">
@@ -308,7 +303,7 @@ export default function DashboardPage() {
               disabled={isGenerating || isGlobalLoading}
               className="w-full h-16 rounded-[1.5rem] bg-gradient-to-r from-[#A855F7] to-[#EC4899] font-black text-lg shadow-xl hover:scale-[1.02] active:scale-95 transition-all mb-4"
             >
-              {isGenerating || isGlobalLoading ? (
+              {(!displayCommentary && (isGenerating || isGlobalLoading)) ? (
                 <Loader2 className="w-5 h-5 animate-spin mr-2" />
               ) : (
                 <CheckCircle2 className="w-5 h-5 mr-2" />
