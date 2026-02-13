@@ -14,3 +14,5 @@ env:
     value: "AIzaSyC2ArqCoWfqaR45OwCGKTaAeRwSZoVQjvU"
   - variable: NODE_OPTIONS
     value: "--max-old-space-size=3072"
+  - variable: NEXT_TELEMETRY_DISABLED
+    value: "1"
