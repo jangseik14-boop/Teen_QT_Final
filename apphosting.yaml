@@ -17,4 +17,4 @@ env:
   - variable: NEXT_PUBLIC_FIREBASE_PROJECT_ID
     value: "studio-5290180250-baff5"
   - variable: GEMINI_API_KEY
-    value: "여기에_API_키를_복사해서_넣으세요"
+    value: "AIzaSyC2ArqCoWfqaR45OwCGKTaAeRwSZoVQjvU"
