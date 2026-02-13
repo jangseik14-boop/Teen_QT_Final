@@ -12,10 +12,20 @@ service cloud.firestore {
 
     // 사용자 프로필 및 개인 묵상 기록
     match /users/{userId} {
-      allow get, list, create, update: if isOwner(userId);
+      allow get, create, update: if isOwner(userId);
       
+      // 명단 관리를 위해 로그인한 사용자는 사용자 목록을 볼 수 있도록 허용
+      // (실제 서비스에서는 관리자 권한 체크를 더 강화할 수 있습니다)
+      allow list: if isSignedIn();
+      
+      // 개인 묵상 기록
       match /meditations/{meditationId} {
         allow get, list, create: if isOwner(userId);
+      }
+
+      // 개인 보관함 (상점에서 구매한 쿠폰 등)
+      match /inventory/{itemId} {
+        allow get, list, create, update: if isOwner(userId);
       }
     }
 
@@ -25,6 +35,7 @@ service cloud.firestore {
       allow write: if isSignedIn(); 
     }
 
+    // 공개된 콘텐츠 (필요 시 사용)
     match /publishedContents/{contentId} {
       allow read: if true;
       allow write: if false;
