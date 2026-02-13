@@ -11,7 +11,8 @@ import {
   Loader2,
   CheckCircle2,
   Calendar,
-  HelpCircle
+  HelpCircle,
+  AlertTriangle
 } from "lucide-react";
 import { useUser, useFirestore, useDoc, updateDocumentNonBlocking, setDocumentNonBlocking, useMemoFirebase } from "@/firebase";
 import { doc } from "firebase/firestore";
@@ -24,7 +25,7 @@ import { cn } from "@/lib/utils";
 const getTodayId = () => new Date().toISOString().split('T')[0];
 
 export default function DashboardPage() {
-  const { user } = useUser();
+  const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
   
   const [reflection, setReflection] = useState("");
@@ -48,12 +49,13 @@ export default function DashboardPage() {
   const displayQ1 = globalMeditation?.q1 || currentVerse.preDefined?.q1;
   const displayQ2 = globalMeditation?.q2 || currentVerse.preDefined?.q2;
 
+  // 연초 포인트 초기화 로직 안정화: 누적 포인트(totalPoints)는 유지하고 현재 포인트만 조정하는 등의 세밀한 관리 필요 시 수정 가능
   useEffect(() => {
     if (userProfile && userRef) {
       const currentYear = new Date().getFullYear();
-      if (!userProfile.lastResetYear || userProfile.lastResetYear < currentYear) {
+      if (userProfile.lastResetYear && userProfile.lastResetYear < currentYear) {
         updateDocumentNonBlocking(userRef, {
-          totalPoints: 0,
+          points: 0, // 사용 가능 포인트만 초기화
           lastResetYear: currentYear,
           updatedAt: new Date().toISOString()
         });
@@ -63,7 +65,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     const fetchOrGenerateAI = async () => {
-      if (isGlobalLoading || globalMeditation?.commentary || isGenerating) return;
+      if (!firestore || isGlobalLoading || globalMeditation?.commentary || isGenerating) return;
 
       setIsGenerating(true);
       try {
@@ -90,31 +92,31 @@ export default function DashboardPage() {
           }
         }
       } catch (error) {
-        console.error("콘텐츠 생성 실패:", error);
+        console.error("AI 콘텐츠 생성 실패:", error);
       } finally {
         setIsGenerating(false);
       }
     };
 
-    if (user && !isGlobalLoading) {
+    if (user && firestore && !isGlobalLoading) {
       fetchOrGenerateAI();
     }
-  }, [globalMeditation, isGlobalLoading, user, todayId, currentVerse, globalMeditationRef, isGenerating]);
+  }, [globalMeditation, isGlobalLoading, user, todayId, currentVerse, globalMeditationRef, isGenerating, firestore]);
 
   const handleComplete = () => {
     if (!user || !userRef || !userMeditationRef) return;
     
-    if (reflection.trim().length < 20 || resolution.trim().length < 20 || prayer.trim().length < 10) {
+    if (reflection.trim().length < 10 || resolution.trim().length < 10 || prayer.trim().length < 5) {
       toast({ 
-        title: "조금 더 정성을 들여볼까요?", 
-        description: "묵상(Q1)과 다짐(Q2)은 20자 이상, 기도는 10자 이상 채워주세요!", 
+        title: "조금 더 적어볼까요?", 
+        description: "내용이 너무 짧아요. 마음을 조금만 더 담아주세요! (각 10자 이상)", 
         variant: "destructive" 
       });
       return;
     }
 
     if (todayUserMeditation) {
-      toast({ title: "이미 완료했어요!", description: "오늘 묵상은 이미 완료되었습니다. 내일 또 만나요!" });
+      toast({ title: "이미 완료했어요!", description: "오늘의 묵상은 이미 기록되었습니다." });
       return;
     }
 
@@ -137,7 +139,7 @@ export default function DashboardPage() {
 
     toast({ 
       title: "묵상 완료! 🎉", 
-      description: "50달란트(D)가 적립되었습니다. 참 잘했어요!",
+      description: "50달란트가 적립되었습니다. 오늘도 수고했어요!",
     });
   };
 
@@ -156,6 +158,16 @@ export default function DashboardPage() {
     year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' 
   }).format(new Date());
 
+  if (!user && !isUserLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center h-[60vh] px-10 text-center space-y-4">
+        <AlertTriangle className="w-12 h-12 text-amber-500" />
+        <p className="font-black text-gray-600">로그인이 필요합니다.<br/>다시 로그인해주세요.</p>
+        <Button onClick={() => window.location.href = '/'}>로그인 페이지로 가기</Button>
+      </div>
+    );
+  }
+
   return (
     <div className="px-5 space-y-6 pt-6">
       <Card className="border-2 border-blue-300 bg-white rounded-[2.5rem] overflow-hidden shadow-md">
@@ -164,7 +176,7 @@ export default function DashboardPage() {
             <Calendar className="w-4 h-4" />
             <p className="font-bold text-xs uppercase tracking-wider">{todayStr}</p>
           </div>
-          <h2 className="text-2xl font-black text-[#1E1B4B] tracking-tight leading-tight">아침마다 새로운 은혜</h2>
+          <h2 className="text-2xl font-black text-[#1E1B4B] tracking-tight leading-tight">오늘의 말씀 묵상</h2>
           <div className="flex items-center gap-2 text-[#6366F1]">
             <BookMarked className="w-4 h-4" />
             <span className="font-black text-sm">{currentVerse.ref}</span>
@@ -232,7 +244,7 @@ export default function DashboardPage() {
                   </p>
                   <div className="relative">
                     <div className="absolute top-3 right-3 z-10">
-                      <CharCount count={reflection.length} target={20} />
+                      <CharCount count={reflection.length} target={10} />
                     </div>
                     <Textarea 
                       placeholder="여기에 솔직한 마음을 적어주세요..."
@@ -251,7 +263,7 @@ export default function DashboardPage() {
                   </p>
                   <div className="relative">
                     <div className="absolute top-3 right-3 z-10">
-                      <CharCount count={resolution.length} target={20} />
+                      <CharCount count={resolution.length} target={10} />
                     </div>
                     <Textarea 
                       placeholder="오늘 하루 꼭 지킬 한 가지를 적어봐요!"
@@ -277,13 +289,13 @@ export default function DashboardPage() {
             <Card className="border-2 border-violet-200 bg-[#F5F3FF] rounded-[2.5rem] shadow-md overflow-hidden">
               <CardContent className="p-7 relative">
                 <div className="absolute top-3 right-3 z-10">
-                  <CharCount count={prayer.length} target={10} />
+                  <CharCount count={prayer.length} target={5} />
                 </div>
                 <Textarea 
                   placeholder="하나님께 드리는 짧은 기도문을 적어보세요..."
                   value={prayer}
                   onChange={(e) => setPrayer(e.target.value)}
-                  className="bg-white border-2 border-violet-100 rounded-2xl min-h-[140px] p-4 pt-10 text-sm focus-visible:ring-violet-400 focus-visible:border-violet-400 placeholder:text-gray-300 resize-none shadow-inner"
+                  className="bg-white border-2 border-violet-100 rounded-2xl min-h-[100px] p-4 pt-10 text-sm focus-visible:ring-violet-400 focus-visible:border-violet-400 placeholder:text-gray-300 resize-none shadow-inner"
                 />
               </CardContent>
             </Card>
@@ -299,7 +311,7 @@ export default function DashboardPage() {
             ) : (
               <CheckCircle2 className="w-5 h-5 mr-2" />
             )}
-            완료하고 50달란트 받기
+            기록 완료하고 50D 받기
           </Button>
         </div>
       )}
