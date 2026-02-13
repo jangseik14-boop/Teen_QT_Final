@@ -1,15 +1,11 @@
 
 {
   "name": "teen-qt-final",
-  "compatibility_date": "2024-11-01",
+  "compatibility_date": "2025-02-13",
   "compatibility_flags": [
     "nodejs_compat"
   ],
   "assets": {
-    "directory": ".vercel/output/static",
-    "binding": "ASSETS"
-  },
-  "observability": {
-    "enabled": true
+    "directory": ".vercel/output/static"
   }
 }
