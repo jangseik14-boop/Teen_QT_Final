@@ -1,12 +1,16 @@
 
 # Firebase App Hosting 설정
 runConfig:
-  # 학생들이 한꺼번에 접속할 경우를 대비해 최소 인스턴스를 유지하거나 최대 인스턴스를 조절할 수 있습니다.
+  # 학생들이 동시에 접속할 때를 대비해 메모리를 1GiB로 넉넉하게 잡았습니다.
+  # AI 연산이나 서버 사이드 렌더링을 더 쾌적하게 처리합니다.
   maxInstances: 10
   minInstances: 0
-  memoryMiB: 512
+  memoryMiB: 1024
+  cpu: 1
 
 # 환경 변수 설정
 env:
   - variable: NODE_ENV
     value: production
+  - variable: NEXT_PUBLIC_FIREBASE_PROJECT_ID
+    value: "studio-5290180250-baff5"
