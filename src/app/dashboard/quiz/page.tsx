@@ -13,12 +13,18 @@ import {
   Ticket, 
   UtensilsCrossed, 
   Home,
-  Trophy
+  Trophy,
+  Smartphone,
+  MessageSquare
 } from 'lucide-react';
 import { toast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { useUser, useFirestore, useDoc, useMemoFirebase, updateDocumentNonBlocking, addDocumentNonBlocking } from "@/firebase";
 import { doc, collection } from "firebase/firestore";
+import Link from "next/link";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 const SHOP_ITEMS = [
   { id: "olv", name: "올리브영 5,000원권", category: "뷰티", price: 500, icon: <Sparkles className="w-6 h-6 text-emerald-400" /> },
@@ -29,15 +35,22 @@ const SHOP_ITEMS = [
   { id: "daiso", name: "다이소 5,000원권", category: "생활", price: 500, icon: <Home className="w-6 h-6 text-rose-400" /> },
 ];
 
+const SPECIAL_ITEMS = [
+  { id: "airpods", name: "에어팟4 노이즈 캔슬링", category: "특별상품", price: 20000, icon: <Star className="w-6 h-6 text-cyan-500" /> },
+  { id: "lenovo", name: "레노버 태블릿", category: "스마트기기", price: 20000, icon: <Smartphone className="w-6 h-6 text-blue-500" /> },
+];
+
 export default function VibeQuizShop() {
   const { user } = useUser();
   const firestore = useFirestore();
   const [isBuying, setIsBuying] = useState<string | null>(null);
+  const [isRequestDialogOpen, setIsRequestDialogOpen] = useState(false);
+  const [requestContent, setRequestContent] = useState("");
 
   const userRef = useMemoFirebase(() => user ? doc(firestore, "users", user.uid) : null, [user, firestore]);
   const { data: userProfile } = useDoc(userRef);
 
-  const handleBuy = async (item: typeof SHOP_ITEMS[0]) => {
+  const handleBuy = async (item: any) => {
     if (!user || !userProfile) {
       toast({ title: "로그인 필요", description: "로그인 후 이용 가능합니다.", variant: "destructive" });
       return;
@@ -76,10 +89,31 @@ export default function VibeQuizShop() {
     }
   };
 
+  const handleRequestProduct = async () => {
+    if (!requestContent.trim()) return;
+    
+    try {
+      const requestsRef = collection(firestore, "productRequests");
+      await addDocumentNonBlocking(requestsRef, {
+        userId: user?.uid,
+        userName: userProfile?.displayName,
+        requestedProduct: requestContent,
+        createdAt: new Date().toISOString(),
+        status: 'pending'
+      });
+      
+      toast({ title: "신청 완료!", description: "전도사님께 상품 신청이 전달되었습니다." });
+      setRequestContent("");
+      setIsRequestDialogOpen(false);
+    } catch (error) {
+      toast({ title: "신청 실패", description: "잠시 후 다시 시도해주세요.", variant: "destructive" });
+    }
+  };
+
   return (
-    <div className="max-w-md mx-auto bg-white min-h-screen pb-24 shadow-2xl overflow-hidden relative font-body">
+    <div className="max-w-md mx-auto bg-white min-h-screen pb-32 shadow-2xl overflow-hidden relative font-body">
       {/* Header */}
-      <header className="px-6 pt-8 pb-4 flex justify-between items-start bg-white sticky top-0 z-40">
+      <header className="px-6 pt-8 pb-4 flex justify-between items-start bg-white sticky top-0 z-40 border-b border-gray-50">
         <div className="space-y-1">
           <h1 className="text-2xl font-black text-[#C026D3] tracking-tight italic">예본TeenQT</h1>
           <p className="text-gray-400 text-[13px] font-medium">환영합니다, {userProfile?.displayName || "친구"}님!</p>
@@ -90,7 +124,7 @@ export default function VibeQuizShop() {
         </div>
       </header>
 
-      <div className="px-6 space-y-6 pt-2">
+      <div className="px-6 space-y-8 pt-6">
         {/* 보유 달란트 배너 */}
         <div className="bg-gradient-to-br from-[#A855F7] to-[#8B5CF6] rounded-[2rem] p-8 text-white space-y-4 shadow-xl relative overflow-hidden">
           <ShoppingBag className="absolute -right-4 -bottom-4 w-32 h-32 opacity-10 rotate-12" />
@@ -101,7 +135,6 @@ export default function VibeQuizShop() {
               <h2 className="text-4xl font-black tracking-tighter">{(userProfile?.points || 0).toLocaleString()}</h2>
             </div>
           </div>
-          {/* 누적 달란트 표시 */}
           <div className="pt-2 border-t border-white/20 flex items-center gap-2 relative z-10">
             <Trophy className="w-3 h-3 text-yellow-200" />
             <p className="text-xs font-bold text-white/70 uppercase tracking-widest">
@@ -110,32 +143,122 @@ export default function VibeQuizShop() {
           </div>
         </div>
 
-        {/* 상품 그리드 */}
-        <div className="grid grid-cols-2 gap-4 pb-10">
-          {SHOP_ITEMS.map(item => (
-            <Card key={item.id} className="border-2 border-cyan-100 bg-[#F0FDFA] rounded-[2rem] overflow-hidden shadow-none hover:shadow-md transition-shadow">
-              <CardContent className="p-6 flex flex-col items-center text-center space-y-3">
-                <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-sm border border-cyan-50">
-                  {item.icon}
-                </div>
-                <div className="space-y-1">
-                  <p className="text-[11px] font-black text-cyan-500 uppercase tracking-tighter">{item.category}</p>
-                  <h3 className="text-sm font-black text-gray-800 leading-tight break-keep px-1">
-                    {item.name}
-                  </h3>
-                </div>
-                <Button 
-                  onClick={() => handleBuy(item)}
-                  disabled={isBuying === item.id}
-                  className="w-full rounded-xl bg-white hover:bg-cyan-50 text-cyan-600 border border-cyan-200 shadow-sm font-black text-xs h-10 transition-all active:scale-95"
-                >
-                  {isBuying === item.id ? "..." : `${item.price.toLocaleString()} D 구매`}
-                </Button>
-              </CardContent>
-            </Card>
-          ))}
+        {/* 일반 상품 그리드 */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-2 px-1">
+            <Gift className="w-5 h-5 text-gray-800" />
+            <h3 className="font-black text-lg text-gray-800 italic">일반 상품</h3>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            {SHOP_ITEMS.map(item => (
+              <Card key={item.id} className="border-2 border-cyan-100 bg-[#F0FDFA] rounded-[2rem] overflow-hidden shadow-none hover:shadow-md transition-shadow">
+                <CardContent className="p-6 flex flex-col items-center text-center space-y-3">
+                  <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-sm border border-cyan-50">
+                    {item.icon}
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-[11px] font-black text-cyan-500 uppercase tracking-tighter">{item.category}</p>
+                    <h3 className="text-sm font-black text-gray-800 leading-tight break-keep px-1">
+                      {item.name}
+                    </h3>
+                  </div>
+                  <Button 
+                    onClick={() => handleBuy(item)}
+                    disabled={isBuying === item.id}
+                    className="w-full rounded-xl bg-white hover:bg-cyan-50 text-cyan-600 border border-cyan-200 shadow-sm font-black text-xs h-10 transition-all active:scale-95"
+                  >
+                    {isBuying === item.id ? "..." : `${item.price.toLocaleString()} D 구매`}
+                  </Button>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+
+        {/* 특별 상품 그리드 */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-2 px-1">
+            <Star className="w-5 h-5 text-gray-800" />
+            <h3 className="font-black text-lg text-gray-800 italic">특별 상품</h3>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            {SPECIAL_ITEMS.map(item => (
+              <Card key={item.id} className="border-2 border-blue-50 bg-[#E0F2FE]/30 rounded-[2rem] overflow-hidden shadow-none">
+                <CardContent className="p-6 flex flex-col items-center text-center space-y-3">
+                  <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-sm border border-blue-50">
+                    {item.icon}
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-[11px] font-black text-blue-400 uppercase tracking-tighter">{item.category}</p>
+                    <h3 className="text-sm font-black text-gray-800 leading-tight break-keep px-1">
+                      {item.name}
+                    </h3>
+                  </div>
+                  <Button 
+                    onClick={() => handleBuy(item)}
+                    disabled={isBuying === item.id}
+                    className="w-full rounded-xl bg-white hover:bg-blue-50 text-blue-600 border border-blue-200 shadow-sm font-black text-xs h-10"
+                  >
+                    {isBuying === item.id ? "..." : `${item.price.toLocaleString()} D 구매`}
+                  </Button>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+
+        {/* 상품 신청 섹션 */}
+        <div className="pb-10">
+          <Card className="border-none bg-rose-50 rounded-[2rem] overflow-hidden">
+            <CardContent className="p-6 flex items-center justify-between gap-4">
+              <div className="space-y-1">
+                <h3 className="font-black text-[15px] text-rose-800">원하는 상품이 없나요?</h3>
+                <p className="text-xs font-medium text-rose-600">전도사님께 새로운 상품을 신청해보세요!</p>
+              </div>
+              <Button 
+                onClick={() => setIsRequestDialogOpen(true)}
+                className="bg-rose-500 hover:bg-rose-600 text-white rounded-2xl font-black px-4 shadow-lg shadow-rose-100"
+              >
+                상품 신청
+              </Button>
+            </CardContent>
+          </Card>
         </div>
       </div>
+
+      {/* 상품 신청 다이얼로그 */}
+      <Dialog open={isRequestDialogOpen} onOpenChange={setIsRequestDialogOpen}>
+        <DialogContent className="rounded-[2.5rem] max-w-[320px] p-8 border-none shadow-2xl">
+          <DialogHeader className="space-y-3">
+            <div className="w-12 h-12 bg-rose-50 rounded-2xl flex items-center justify-center mx-auto mb-2">
+              <MessageSquare className="w-6 h-6 text-rose-500" />
+            </div>
+            <DialogTitle className="text-xl font-black text-center text-gray-800 tracking-tight italic">상품 신청하기</DialogTitle>
+            <DialogDescription className="text-center text-gray-400 font-bold text-sm">
+              상점에 들어왔으면 하는 상품을<br/>자유롭게 적어주세요!
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4 space-y-4">
+            <div className="space-y-2">
+              <Label className="text-xs font-black text-gray-400 ml-1">상품 이름 / 내용</Label>
+              <Input 
+                placeholder="예: 문화상품권 1만원권"
+                value={requestContent}
+                onChange={(e) => setRequestContent(e.target.value)}
+                className="h-12 bg-gray-50 border-none rounded-xl px-4 font-bold focus-visible:ring-rose-200"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button 
+              onClick={handleRequestProduct}
+              className="w-full h-12 rounded-xl bg-rose-500 hover:bg-rose-600 font-black shadow-lg shadow-rose-100"
+            >
+              신청 완료
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Bottom Nav */}
       <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white/95 backdrop-blur-md border-t-2 border-blue-100 px-6 py-4 flex justify-between items-center rounded-t-[2.5rem] z-50 shadow-[0_-10px_30px_rgba(0,0,0,0.1)]">
@@ -156,13 +279,10 @@ export default function VibeQuizShop() {
           <span className="text-[11px] font-black text-[#C026D3]">상점</span>
         </Link>
         <Link href="/dashboard/my" className="flex flex-col items-center gap-1 group text-gray-400">
-          <ShoppingBag className="w-6 h-6" />
+          <User className="w-6 h-6" />
           <span className="text-[11px] font-bold">MY</span>
         </Link>
       </nav>
     </div>
   );
 }
-
-// Next.js Link 컴포넌트 사용을 위한 간단한 처리
-import Link from "next/link";

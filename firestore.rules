@@ -1,3 +1,4 @@
+
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -20,7 +21,6 @@ service cloud.firestore {
 
     // 사용자 프로필 및 개인 기록
     match /users/{userId} {
-      // 가입 시 중복 체크 및 로그인 시 정보 조회를 위해 read(get, list) 허용
       allow get, list: if true;
       allow create: if isSignedIn() && request.auth.uid == userId;
       allow update: if isOwner(userId) || isAdmin();
@@ -43,6 +43,12 @@ service cloud.firestore {
     match /dailyMeditations/{dateId} {
       allow read: if true;
       allow write: if isSignedIn(); 
+    }
+
+    // 상품 신청 내역
+    match /productRequests/{requestId} {
+      allow create: if isSignedIn();
+      allow read, delete: if isAdmin();
     }
 
     // 공개된 콘텐츠

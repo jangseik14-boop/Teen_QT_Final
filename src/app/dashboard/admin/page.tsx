@@ -20,7 +20,9 @@ import {
   Trash2,
   Calendar,
   AlertCircle,
-  Trophy
+  Trophy,
+  MessageSquare,
+  CheckCircle2
 } from "lucide-react";
 import Link from "next/link";
 import { useFirestore, useCollection, useMemoFirebase, updateDocumentNonBlocking, deleteDocumentNonBlocking } from "@/firebase";
@@ -47,6 +49,14 @@ export default function AdminDashboardPage() {
   ), [firestore]);
 
   const { data: rawUsers, isLoading } = useCollection(usersQuery);
+
+  // 상품 신청 내역 가져오기
+  const requestsQuery = useMemoFirebase(() => query(
+    collection(firestore, "productRequests"),
+    orderBy("createdAt", "desc")
+  ), [firestore]);
+
+  const { data: productRequests, isLoading: isReqLoading } = useCollection(requestsQuery);
 
   // 메모리에서 누적 포인트 순으로 정렬
   const allUsers = useMemo(() => {
@@ -101,7 +111,6 @@ export default function AdminDashboardPage() {
     const newPoints = editPoints;
     const diff = newPoints - oldPoints;
     
-    // 누적 포인트(totalPoints)는 현재 포인트가 높아진 만큼만 자동으로 더해줌
     let updatedTotalPoints = selectedUser.totalPoints || 0;
     if (diff > 0) {
       updatedTotalPoints += diff;
@@ -129,7 +138,6 @@ export default function AdminDashboardPage() {
   const handleInvalidateMeditation = (meditationId: string) => {
     if (!selectedUser) return;
     
-    // 포인트 및 누적 포인트 회수
     const userRef = doc(firestore, "users", selectedUser.id);
     const newPoints = Math.max(0, (selectedUser.points || 0) - 50);
     const newTotalPoints = Math.max(0, (selectedUser.totalPoints || 0) - 50);
@@ -140,7 +148,6 @@ export default function AdminDashboardPage() {
       updatedAt: new Date().toISOString()
     });
 
-    // 묵상 기록 삭제
     const medRef = doc(firestore, `users/${selectedUser.id}/meditations`, meditationId);
     deleteDocumentNonBlocking(medRef);
 
@@ -149,6 +156,12 @@ export default function AdminDashboardPage() {
       description: "묵상 내용이 삭제되고 50달란트가 회수되었습니다.",
       variant: "destructive"
     });
+  };
+
+  const handleDeleteRequest = (requestId: string) => {
+    const reqRef = doc(firestore, "productRequests", requestId);
+    deleteDocumentNonBlocking(reqRef);
+    toast({ title: "삭제 완료", description: "신청 내역이 삭제되었습니다." });
   };
 
   const roleLabels: Record<string, string> = {
@@ -185,45 +198,95 @@ export default function AdminDashboardPage() {
           </Card>
           <Card className="border-none shadow-sm bg-purple-50 rounded-[1.5rem]">
             <CardContent className="p-4 space-y-1">
-              <TrendingUp className="w-5 h-5 text-purple-500 mb-1" />
-              <p className="text-xs font-bold text-purple-600 uppercase tracking-tighter">포인트 TOP</p>
-              <p className="text-2xl font-black text-purple-900">{allUsers?.[0]?.displayName || "-"}</p>
+              <MessageSquare className="w-5 h-5 text-purple-500 mb-1" />
+              <p className="text-xs font-bold text-purple-600 uppercase tracking-tighter">상품 신청</p>
+              <p className="text-2xl font-black text-purple-900">{productRequests?.length || 0}건</p>
             </CardContent>
           </Card>
         </div>
 
-        {/* 명단 관리 섹션 */}
+        {/* 명단 및 신청 관리 섹션 */}
         <div className="space-y-4">
-          <div className="flex items-center gap-2 px-1">
-            <GraduationCap className="w-5 h-5 text-gray-800" />
-            <h3 className="font-black text-lg text-gray-800 italic">회원 그룹 명단</h3>
-          </div>
-
-          <Tabs defaultValue="middle" className="w-full">
-            <TabsList className="w-full bg-white border-2 border-gray-100 p-1 rounded-2xl h-12">
-              <TabsTrigger value="middle" className="flex-1 rounded-xl font-bold data-[state=active]:bg-gray-100">중등부</TabsTrigger>
-              <TabsTrigger value="high" className="flex-1 rounded-xl font-bold data-[state=active]:bg-gray-100">고등부</TabsTrigger>
-              <TabsTrigger value="others" className="flex-1 rounded-xl font-bold data-[state=active]:bg-gray-100">기타</TabsTrigger>
+          <Tabs defaultValue="list" className="w-full">
+            <TabsList className="w-full bg-white border-2 border-gray-100 p-1 rounded-2xl h-12 mb-6">
+              <TabsTrigger value="list" className="flex-1 rounded-xl font-bold data-[state=active]:bg-gray-100">회원 명단</TabsTrigger>
+              <TabsTrigger value="requests" className="flex-1 rounded-xl font-bold data-[state=active]:bg-gray-100">상품 신청</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="middle" className="space-y-6 pt-4">
-              <UserSegment title="중남 (중등부 남자)" users={segmentedUsers.middleMale} color="blue" onManage={handleManageUser} />
-              <UserSegment title="중여 (중등부 여자)" users={segmentedUsers.middleFemale} color="pink" onManage={handleManageUser} />
+            <TabsContent value="list" className="space-y-6">
+              <Tabs defaultValue="middle" className="w-full">
+                <TabsList className="w-full bg-white/50 border border-gray-100 p-1 rounded-xl h-10 mb-4">
+                  <TabsTrigger value="middle" className="flex-1 rounded-lg text-xs font-bold">중등부</TabsTrigger>
+                  <TabsTrigger value="high" className="flex-1 rounded-lg text-xs font-bold">고등부</TabsTrigger>
+                  <TabsTrigger value="others" className="flex-1 rounded-lg text-xs font-bold">기타</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="middle" className="space-y-6">
+                  <UserSegment title="중남 (중등부 남자)" users={segmentedUsers.middleMale} color="blue" onManage={handleManageUser} />
+                  <UserSegment title="중여 (중등부 여자)" users={segmentedUsers.middleFemale} color="pink" onManage={handleManageUser} />
+                </TabsContent>
+
+                <TabsContent value="high" className="space-y-6">
+                  <UserSegment title="고남 (고등부 남자)" users={segmentedUsers.highMale} color="indigo" onManage={handleManageUser} />
+                  <UserSegment title="고여 (고등부 여자)" users={segmentedUsers.highFemale} color="rose" onManage={handleManageUser} />
+                </TabsContent>
+
+                <TabsContent value="others">
+                  <UserSegment title="기타 (교사/교역자)" users={segmentedUsers.others} color="gray" onManage={handleManageUser} />
+                </TabsContent>
+              </Tabs>
             </TabsContent>
 
-            <TabsContent value="high" className="space-y-6 pt-4">
-              <UserSegment title="고남 (고등부 남자)" users={segmentedUsers.highMale} color="indigo" onManage={handleManageUser} />
-              <UserSegment title="고여 (고등부 여자)" users={segmentedUsers.highFemale} color="rose" onManage={handleManageUser} />
-            </TabsContent>
-
-            <TabsContent value="others" className="pt-4">
-              <UserSegment title="기타 (교사/교역자)" users={segmentedUsers.others} color="gray" onManage={handleManageUser} />
+            <TabsContent value="requests" className="space-y-4">
+              <div className="flex items-center justify-between px-1">
+                <h3 className="font-black text-sm text-gray-500 italic">신규 상품 신청 내역</h3>
+                <Badge variant="outline" className="font-black border-gray-200">{productRequests?.length || 0}건</Badge>
+              </div>
+              
+              <div className="space-y-3">
+                {isReqLoading ? (
+                  <p className="text-center py-10 text-xs font-bold text-gray-300 animate-pulse">불러오는 중...</p>
+                ) : productRequests && productRequests.length > 0 ? (
+                  productRequests.map((req) => (
+                    <Card key={req.id} className="border-none shadow-sm rounded-2xl bg-white overflow-hidden">
+                      <CardContent className="p-5 space-y-3">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <p className="text-[10px] font-black text-purple-600 uppercase tracking-wider mb-0.5">Requester</p>
+                            <p className="font-black text-sm text-gray-800">{req.userName} 학생</p>
+                          </div>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            onClick={() => handleDeleteRequest(req.id)}
+                            className="h-8 w-8 text-gray-300 hover:text-rose-500 hover:bg-rose-50"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                        <div className="bg-gray-50 p-3 rounded-xl border border-gray-100">
+                          <p className="text-[10px] font-black text-gray-400 mb-1">Requested Product</p>
+                          <p className="text-sm font-bold text-gray-700">{req.requestedProduct}</p>
+                        </div>
+                        <div className="flex justify-end">
+                          <p className="text-[10px] font-bold text-gray-300">{new Date(req.createdAt).toLocaleString()}</p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))
+                ) : (
+                  <div className="text-center py-12 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-100">
+                    <MessageSquare className="w-10 h-10 text-gray-200 mx-auto mb-2" />
+                    <p className="text-xs font-bold text-gray-300">신청된 상품이 없습니다.</p>
+                  </div>
+                )}
+              </div>
             </TabsContent>
           </Tabs>
         </div>
       </div>
 
-      {/* 회원 관리 다이얼로그 */}
+      {/* 회원 관리 다이얼로그 (생략 없이 유지) */}
       <Dialog open={isManageOpen} onOpenChange={setIsManageOpen}>
         <DialogContent className="rounded-[2.5rem] max-w-[400px] p-6 border-none shadow-2xl h-[90vh] flex flex-col">
           <DialogHeader className="space-y-2 shrink-0">
@@ -238,7 +301,6 @@ export default function AdminDashboardPage() {
 
           <ScrollArea className="flex-1 mt-4 px-1">
             <div className="space-y-6 pb-6">
-              {/* 기본 정보 */}
               <div className="space-y-2">
                 <Label className="text-[10px] font-black text-gray-400 ml-1 uppercase tracking-wider">Basic Info</Label>
                 <div className="bg-gray-50 p-4 rounded-2xl space-y-2 border border-gray-100">
@@ -255,7 +317,6 @@ export default function AdminDashboardPage() {
                 </div>
               </div>
 
-              {/* 달란트 설정 */}
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black text-gray-400 ml-1 uppercase tracking-wider italic">Current (D)</Label>
@@ -280,7 +341,6 @@ export default function AdminDashboardPage() {
 
               <Separator className="bg-gray-100" />
 
-              {/* 묵상 기록 */}
               <div className="space-y-3">
                 <Label className="text-[10px] font-black text-gray-400 ml-1 uppercase tracking-wider flex items-center gap-2">
                   <BookOpen className="w-3 h-3" /> Meditation History
@@ -390,7 +450,7 @@ function UserSegment({ title, users, color, onManage }: { title: string, users: 
     <div className="space-y-3">
       <div className="flex justify-between items-center px-1">
         <h4 className="font-black text-sm text-gray-500">{title}</h4>
-        <Badge variant="outline" className="font-black border-gray-200">{users.length}명</Badge>
+        <Badge variant="outline" className="font-black border-gray-200 text-[10px]">{users.length}명</Badge>
       </div>
       <div className="space-y-2">
         {users.length > 0 ? users.map((user) => (
