@@ -1,17 +1,14 @@
 
-# 🚀 예본TeenQT 클라우드플레어 최종 배포 가이드
+# 🚀 예본TeenQT 네트리파이(Netlify) 배포 가이드
 
-### ✅ 배포를 시작하는 방법 (아무 일도 안 일어날 때)
+### ✅ 배포 방법
+1.  **네트리파이 접속**: [netlify.com](https://www.netlify.com/)에 로그인합니다.
+2.  **새 사이트 추가**: `Add new site` -> `Import an existing project` -> `GitHub`를 선택합니다.
+3.  **리포지토리 선택**: 현재 프로젝트가 있는 GitHub 저장소를 선택합니다.
+4.  **환경 변수 설정 (중요!)**: `Site configuration` -> `Environment variables`에서 아래 3개를 입력합니다.
+    *   `GEMINI_API_KEY`: `AIzaSyC2ArqCoWfqaR45OwCGKTaAeRwSZoVQjvU`
+    *   `NEXT_PUBLIC_FIREBASE_PROJECT_ID`: `studio-5290180250-baff5`
+    *   `NODE_VERSION`: `20`
+5.  **배포 시작**: `Deploy site`를 누르면 끝!
 
-1.  **에디터에서 변경사항 적용**: 이 메시지 위의 **[변경사항 적용]** 버튼을 누르세요. (`wrangler.jsonc` 파일이 생성됩니다.)
-2.  **깃허브로 푸시(전송)**:
-    *   왼쪽 메뉴에서 **[↑] (Source Control)** 아이콘을 누릅니다.
-    *   메시지 칸에 `deploy: final config`라고 적습니다.
-    *   위에 있는 **체크(Commit)** 버튼을 누릅니다.
-    *   **Sync Changes (푸시)** 버튼을 누릅니다.
-3.  **클라우드플레어 확인**:
-    *   푸시를 완료하면 클라우드플레어 대시보드 상단의 **[Deployments]** 또는 **[배포]** 탭을 클릭해 보세요.
-    *   "Build in progress(빌드 중)"이라는 파란색 진행 바가 뜨면 성공입니다!
-
-**만약 여전히 조용하다면?**
-*   클라우드플레어 대시보드 화면 맨 위 메뉴 중 **[Deployments]** 탭을 누른 후, 우측의 **[Deploy system]** 또는 **[Retry]** 버튼을 클릭해 주세요!
+**네트리파이는 복잡한 설정 없이 자동으로 Next.js를 감지하여 배포해 줍니다.**
