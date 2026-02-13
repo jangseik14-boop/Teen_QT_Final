@@ -12,3 +12,5 @@ env:
     value: "studio-5290180250-baff5"
   - variable: GEMINI_API_KEY
     value: "AIzaSyC2ArqCoWfqaR45OwCGKTaAeRwSZoVQjvU"
+  - variable: NODE_OPTIONS
+    value: "--max-old-space-size=1536"
