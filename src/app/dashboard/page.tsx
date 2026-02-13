@@ -220,12 +220,12 @@ export default function DashboardPage() {
           </div>
         ) : (
           <div className="space-y-8">
-            {/* 오늘의 질문 통합 섹션 */}
+            {/* 말씀묵상 (Q1, Q2 통합 섹션) */}
             <div className="space-y-3">
               <div className="flex items-center gap-2 px-1">
                 <div className="w-1.5 h-6 bg-[#F59E0B] rounded-full" />
                 <h3 className="font-black text-lg text-gray-800 flex items-center gap-2 italic">
-                  오늘의 질문 <HelpCircle className="w-4 h-4 text-[#F59E0B]" />
+                  말씀묵상 <HelpCircle className="w-4 h-4 text-[#F59E0B]" />
                 </h3>
               </div>
               <Card className="border-2 border-amber-200 bg-[#FFFBEB] rounded-[2.5rem] shadow-md overflow-hidden">
@@ -236,7 +236,7 @@ export default function DashboardPage() {
                       {isGenerating || isGlobalLoading ? (
                         "질문을 생각 중..."
                       ) : (
-                        globalMeditation?.q1 || "말씀을 통해 느낀 점을 적어보세요."
+                        `Q1. ${globalMeditation?.q1 || "말씀을 통해 느낀 점을 적어보세요."}`
                       )}
                     </div>
                     <Textarea 
@@ -255,7 +255,7 @@ export default function DashboardPage() {
                       {isGenerating || isGlobalLoading ? (
                         "다짐을 생각 중..."
                       ) : (
-                        globalMeditation?.q2 || "오늘 하루 무엇을 실천하고 싶나요?"
+                        `Q2. ${globalMeditation?.q2 || "오늘 하루 무엇을 실천하고 싶나요?"}`
                       )}
                     </div>
                     <Textarea 
