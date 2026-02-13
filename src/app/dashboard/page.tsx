@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -22,7 +21,7 @@ import { useUser, useFirestore, useDoc, updateDocumentNonBlocking, setDocumentNo
 import { doc } from "firebase/firestore";
 import { generateMeditation } from "@/ai/flows/generate-meditation";
 import { toast } from "@/hooks/use-toast";
-import { getVerseForToday } from "@/lib/bible-verses";
+import { getVerseForToday, BIBLE_VERSES } from "@/lib/bible-verses";
 
 // 오늘 날짜 ID 생성 (YYYY-MM-DD)
 const getTodayId = () => new Date().toISOString().split('T')[0];
@@ -47,16 +46,28 @@ export default function DashboardPage() {
   const userMeditationRef = useMemoFirebase(() => user ? doc(firestore, `users/${user.uid}/meditations/${todayId}`) : null, [user, firestore, todayId]);
   const { data: todayUserMeditation } = useDoc(userMeditationRef);
 
-  // 3. 전역 공유 묵상 데이터 (AI 해설 및 질문) 가져오기
+  // 3. 전역 공유 묵상 데이터 가져오기
   const globalMeditationRef = useMemoFirebase(() => doc(firestore, "dailyMeditations", todayId), [firestore, todayId]);
   const { data: globalMeditation, isLoading: isGlobalLoading } = useDoc(globalMeditationRef);
 
-  // 4. AI 데이터가 없으면 최초 접속자가 생성하여 저장
+  // 4. 데이터 로드/생성 로직
   useEffect(() => {
     const fetchOrGenerateAI = async () => {
       // 이미 데이터가 있거나 로딩 중이면 건너뜀
       if (isGlobalLoading || globalMeditation?.commentary) return;
 
+      // 만약 말씀 구절에 미리 정의된 해설이 있다면 그것을 사용
+      if (currentVerse.preDefined) {
+        setDocumentNonBlocking(globalMeditationRef, {
+          ...currentVerse.preDefined,
+          verse: currentVerse.ref,
+          verseText: currentVerse.text,
+          createdAt: new Date().toISOString()
+        }, { merge: true });
+        return;
+      }
+
+      // 없다면 AI 생성
       setIsGenerating(true);
       try {
         const result = await generateMeditation({
@@ -64,7 +75,6 @@ export default function DashboardPage() {
           verseText: currentVerse.text
         });
 
-        // 생성된 내용을 Firestore 전역 컬렉션에 저장 (이후 접속자는 이 데이터를 사용함)
         setDocumentNonBlocking(globalMeditationRef, {
           ...result,
           verse: currentVerse.ref,
@@ -141,15 +151,15 @@ export default function DashboardPage() {
         </div>
       </header>
 
-      <div className="px-5 space-y-6 overflow-y-auto max-h-[calc(100vh-160px)] pb-10 scrollbar-hide">
+      <div className="px-5 space-y-6 overflow-y-auto h-[calc(100vh-180px)] pb-10 scrollbar-hide">
         {/* 오늘의 주제 카드 */}
-        <Card className="border-none bg-[#EEF2FF] rounded-[2rem] overflow-hidden">
+        <Card className="border-none bg-[#EEF2FF] rounded-[2rem] overflow-hidden shadow-sm">
           <CardContent className="p-8 space-y-3">
             <div className="flex items-center gap-2 text-[#6366F1] mb-1">
               <Calendar className="w-4 h-4" />
               <p className="font-bold text-xs uppercase tracking-wider">{todayStr}</p>
             </div>
-            <h2 className="text-2xl font-black text-[#1E1B4B] tracking-tight">아침마다 새로운 은혜</h2>
+            <h2 className="text-2xl font-black text-[#1E1B4B] tracking-tight leading-tight">아침마다 새로운 은혜</h2>
             <div className="flex items-center gap-2 text-[#6366F1]">
               <BookMarked className="w-4 h-4" />
               <span className="font-bold text-sm">{currentVerse.ref}</span>
@@ -158,7 +168,7 @@ export default function DashboardPage() {
         </Card>
 
         {/* 말씀 구절 카드 */}
-        <Card className="border-none bg-[#F0F9FF] rounded-[2rem]">
+        <Card className="border-none bg-[#F0F9FF] rounded-[2rem] shadow-sm">
           <CardContent className="p-8 text-center italic text-[#0369A1] font-bold text-lg leading-relaxed">
             "{currentVerse.text}"
           </CardContent>
@@ -172,7 +182,7 @@ export default function DashboardPage() {
               말씀 해설 <Sparkles className="w-4 h-4 text-[#22C3C3]" />
             </h3>
           </div>
-          <Card className="border-none bg-[#FDF2F8] rounded-[2rem]">
+          <Card className="border-none bg-[#FDF2F8] rounded-[2rem] shadow-sm">
             <CardContent className="p-7 text-gray-600 font-medium leading-relaxed text-[15px]">
               {isGenerating || isGlobalLoading ? (
                 <div className="flex items-center justify-center py-4 gap-3 text-muted-foreground animate-pulse">
@@ -188,7 +198,7 @@ export default function DashboardPage() {
 
         {/* 묵상 입력 폼 또는 완료 메시지 */}
         {todayUserMeditation ? (
-          <div className="bg-green-50 border-2 border-green-200 rounded-[2.5rem] p-10 text-center space-y-4 animate-in fade-in zoom-in duration-500">
+          <div className="bg-green-50 border-2 border-green-200 rounded-[2.5rem] p-10 text-center space-y-4 animate-in fade-in zoom-in duration-500 shadow-sm">
             <div className="bg-white w-20 h-20 rounded-full flex items-center justify-center mx-auto shadow-md border-4 border-green-100">
               <CheckCircle2 className="w-12 h-12 text-green-500" />
             </div>
@@ -201,7 +211,7 @@ export default function DashboardPage() {
           </div>
         ) : (
           <div className="space-y-6">
-            <Card className="border-none bg-[#FFFBEB] rounded-[2.5rem] p-7 space-y-8">
+            <Card className="border-none bg-[#FFFBEB] rounded-[2.5rem] p-7 space-y-8 shadow-sm">
               <div className="space-y-4">
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
@@ -241,7 +251,7 @@ export default function DashboardPage() {
               </div>
             </Card>
 
-            <Card className="border-none bg-[#F5F3FF] rounded-[2.5rem] p-7 space-y-4">
+            <Card className="border-none bg-[#F5F3FF] rounded-[2.5rem] p-7 space-y-4 shadow-sm">
               <h3 className="font-black text-lg text-[#5B21B6]">🙏 기도하기</h3>
               <Textarea 
                 placeholder="10자 이상 작성해주세요..."
@@ -254,7 +264,7 @@ export default function DashboardPage() {
             <Button 
               onClick={handleComplete}
               disabled={isGenerating || isGlobalLoading}
-              className="w-full h-16 rounded-[1.5rem] bg-gradient-to-r from-[#A855F7] to-[#EC4899] font-bold text-lg shadow-xl hover:scale-[1.02] active:scale-95 transition-all"
+              className="w-full h-16 rounded-[1.5rem] bg-gradient-to-r from-[#A855F7] to-[#EC4899] font-bold text-lg shadow-xl hover:scale-[1.02] active:scale-95 transition-all mb-10"
             >
               {isGenerating || isGlobalLoading ? (
                 <Loader2 className="w-5 h-5 animate-spin mr-2" />
@@ -268,7 +278,7 @@ export default function DashboardPage() {
       </div>
 
       {/* 하단 네비게이션 */}
-      <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white/90 backdrop-blur-md border-t border-gray-100 px-6 py-4 flex justify-between items-center rounded-t-[2.5rem] z-50 shadow-[0_-10px_30px_rgba(0,0,0,0.03)]">
+      <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white/95 backdrop-blur-md border-t border-gray-100 px-6 py-4 flex justify-between items-center rounded-t-[2.5rem] z-50 shadow-[0_-10px_30px_rgba(0,0,0,0.05)]">
         <Link href="/dashboard" className="flex flex-col items-center gap-1 group">
           <BookOpen className="w-6 h-6 text-[#C026D3]" />
           <span className="text-[11px] font-black text-[#C026D3]">QT</span>
