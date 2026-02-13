@@ -1,252 +1,164 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Sparkles, BookOpen, ShoppingBag, CheckCircle2, ChevronRight, Trophy } from 'lucide-react';
+import { Sparkles, BookOpen, ShoppingBag, CheckCircle2, Trophy, Zap } from 'lucide-react';
 import { toast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 
-// 데이터 변수들을 컴포넌트 외부(전역 스코프)로 정의
-const qtDatabase = [
-  { 
-    id: "qt-1", 
-    title: "새벽의 침묵", 
-    description: "오늘 하루를 차분한 명상으로 시작해보세요. 조용한 시간 속에서 내면의 목소리에 귀를 기울입니다.",
-    category: "Morning"
-  },
-  { 
-    id: "qt-2", 
-    title: "한낮의 쉼표", 
-    description: "복잡한 생각들을 잠시 내려놓고 현재의 순간에 집중합니다. 호흡을 가다듬고 여유를 찾아보세요.",
-    category: "Afternoon"
-  },
-  { 
-    id: "qt-3", 
-    title: "별 헤는 밤", 
-    description: "오늘 하루 감사했던 일들을 떠올리며 평온하게 마무리합니다. 내일의 희망을 꿈꾸는 시간입니다.",
-    category: "Evening"
-  }
-];
-
-const quizDatabase = [
+// --- 전역 데이터 스코프 ---
+const VIBE_QUIZ = [
   {
     id: 1,
-    question: "웹캔버스의 핵심 가치는 무엇인가요?",
-    options: ["창의성", "속도", "협업", "모두 다"],
-    answer: "모두 다"
+    question: "오늘의 핵심 바이브! '주의 말씀은 내 발에 ○○이요?'",
+    options: ["손전등", "등불", "헤드라이트", "스포트라이트"],
+    answer: "등불"
   },
   {
     id: 2,
-    question: "리액트에서 상태 관리를 위해 가장 기본적으로 사용하는 훅은?",
-    options: ["useEffect", "useState", "useMemo", "useRef"],
-    answer: "useState"
-  },
-  {
-    id: 3,
-    question: "Next.js에서 서버 사이드 렌더링을 지원하는 가장 큰 이유는?",
-    options: ["보안", "SEO 및 초기 로딩 속도", "디자인", "파일 크기"],
-    answer: "SEO 및 초기 로딩 속도"
+    question: "세상 시선보다 중요한 것은?",
+    options: ["좋아요 수", "팔로워 수", "하나님의 시선", "최신 유행"],
+    answer: "하나님의 시선"
   }
 ];
 
-const shopItems = [
-  {
-    id: "item-1",
-    name: "프로 에디터 팩",
-    price: "12,000 P",
-    feature: "무제한 AI 글쓰기 제안 및 고급 교정 기능",
-    badge: "Hot"
-  },
-  {
-    id: "item-2",
-    name: "프리미엄 템플릿",
-    price: "8,000 P",
-    feature: "50개 이상의 독점 레이아웃과 디자인 에셋",
-    badge: "New"
-  },
-  {
-    id: "item-3",
-    name: "다이소 상품권",
-    price: "5,000 P",
-    feature: "전국 다이소 매장에서 사용 가능한 모바일 쿠폰"
-  },
-  {
-    id: "item-4",
-    name: "황금올리브 치킨",
-    price: "2,000 D",
-    feature: "바삭하고 고소한 황금빛 유혹, 오늘 저녁은 치킨!",
-    badge: "Best"
-  }
+const SHOP_ITEMS = [
+  { id: "s1", name: "힙합 묵상 스티커팩", price: "500 P", desc: "노트북 꾸미기 필수템", badge: "Hit" },
+  { id: "s2", name: "AI 딥해석권 (5회)", price: "1,000 P", desc: "어려운 말씀도 1초 컷", badge: "New" },
+  { id: "s3", name: "황금올리브 치킨", price: "2,000 D", desc: "갓생 산 너에게 주는 선물", badge: "Flex" }
 ];
 
-export default function QuizApp() {
+export default function VibeQuizShop() {
   const [currentQuiz, setCurrentQuiz] = useState(0);
   const [score, setScore] = useState(0);
 
+  useEffect(() => {
+    const savedScore = localStorage.getItem('vibeword_score');
+    if (savedScore) setScore(parseInt(savedScore));
+  }, []);
+
   const handleAnswer = (selected: string) => {
-    if (selected === quizDatabase[currentQuiz].answer) {
-      setScore(s => s + 10);
+    if (selected === VIBE_QUIZ[currentQuiz].answer) {
+      const newScore = score + 100;
+      setScore(newScore);
+      localStorage.setItem('vibeword_score', newScore.toString());
       toast({ 
-        title: "정답입니다! 🎉", 
-        description: "포인트가 10점 추가되었습니다.",
+        title: "VIBE CHECK PASS! 🤘", 
+        description: "100포인트 획득! 역시 넌 힙해.",
       });
     } else {
       toast({ 
-        title: "아쉽네요! 💡", 
-        description: `정답은 "${quizDatabase[currentQuiz].answer}"입니다.`, 
+        title: "오답도 힙하게! 💡", 
+        description: `다시 한번 묵상해보자. 정답은 "${VIBE_QUIZ[currentQuiz].answer}"`, 
         variant: "destructive" 
       });
     }
     
-    // 다음 퀴즈로 넘어가기 (마지막이면 처음으로)
     setTimeout(() => {
-      setCurrentQuiz((prev) => (prev + 1) % quizDatabase.length);
-    }, 500);
+      setCurrentQuiz((prev) => (prev + 1) % VIBE_QUIZ.length);
+    }, 800);
   };
 
   return (
-    <div className="max-w-6xl mx-auto space-y-10 pb-20">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-        <div className="space-y-2">
-          <Badge variant="outline" className="text-primary border-primary/20 bg-primary/5">Interactive Studio</Badge>
-          <h1 className="text-4xl font-bold font-headline flex items-center gap-3">
-            Quiz & Shop <Sparkles className="text-accent animate-pulse" />
+    <div className="max-w-6xl mx-auto space-y-12 pb-20">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <div className="space-y-3">
+          <Badge className="bg-primary/20 text-primary border-none font-black px-4 py-1 uppercase tracking-widest text-[10px]">Level Up Studio</Badge>
+          <h1 className="text-5xl font-black tracking-tighter flex items-center gap-3 italic">
+            Vibe Check <Zap className="text-accent fill-accent animate-bounce" />
           </h1>
-          <p className="text-muted-foreground text-lg">퀴즈를 풀고 얻은 포인트로 상점에서 특별한 아이템을 구매하세요.</p>
+          <p className="text-muted-foreground text-xl font-medium">퀴즈 풀고 힙한 아이템 Flex 하러 가자!</p>
         </div>
-        <div className="flex items-center gap-4 bg-card p-4 rounded-2xl border shadow-sm">
+        <div className="flex items-center gap-6 bg-black text-white p-6 rounded-[2rem] shadow-2xl rotate-1">
            <div className="flex flex-col">
-              <span className="text-xs text-muted-foreground font-bold uppercase">My Points</span>
-              <span className="text-2xl font-bold text-primary">{score} P</span>
+              <span className="text-[10px] text-white/50 font-black uppercase tracking-widest">Available Vibe</span>
+              <span className="text-3xl font-black text-accent italic">{score.toLocaleString()} P</span>
            </div>
-           <div className="h-10 w-[1px] bg-border mx-2" />
-           <Trophy className="w-8 h-8 text-yellow-500" />
+           <div className="h-12 w-[1px] bg-white/10" />
+           <Trophy className="w-10 h-10 text-yellow-400" />
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Left Section: Quiz & QT */}
-        <div className="lg:col-span-2 space-y-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+        <div className="lg:col-span-2 space-y-10">
           {/* Quiz Card */}
-          <Card className="border-none shadow-xl bg-gradient-to-br from-card to-accent/5 overflow-hidden">
-            <CardHeader className="border-b bg-background/50 backdrop-blur-sm">
+          <Card className="border-none shadow-2xl bg-white overflow-hidden rounded-[2.5rem]">
+            <CardHeader className="bg-primary text-white p-8">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="bg-primary/10 p-2 rounded-lg text-primary">
-                    <Sparkles className="w-5 h-5" />
+                <div className="flex items-center gap-3">
+                  <div className="bg-white/20 p-2 rounded-xl">
+                    <Sparkles className="w-6 h-6 text-white" />
                   </div>
-                  <div>
-                    <CardTitle className="text-lg">Daily Quiz</CardTitle>
-                    <CardDescription>질문을 읽고 정답을 골라주세요.</CardDescription>
-                  </div>
+                  <CardTitle className="text-2xl font-black italic">Today's Vibe Check</CardTitle>
                 </div>
-                <Badge variant="secondary" className="px-3 py-1">Question {currentQuiz + 1}/{quizDatabase.length}</Badge>
+                <Badge className="bg-white text-primary font-black px-4 py-1">Q {currentQuiz + 1}</Badge>
               </div>
             </CardHeader>
-            <CardContent className="pt-10 pb-10 space-y-8">
-              <h3 className="text-2xl font-bold text-center leading-tight max-w-lg mx-auto">
-                {quizDatabase[currentQuiz].question}
+            <CardContent className="p-10 space-y-10 text-center">
+              <h3 className="text-3xl font-black leading-tight max-w-lg mx-auto italic">
+                {VIBE_QUIZ[currentQuiz].question}
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {quizDatabase[currentQuiz].options.map((option, idx) => (
+                {VIBE_QUIZ[currentQuiz].options.map((option, idx) => (
                   <Button 
                     key={idx} 
                     variant="outline" 
-                    className="h-20 text-lg hover:border-primary hover:bg-primary/5 transition-all rounded-2xl border-2 flex flex-col gap-1 items-center justify-center group"
+                    className="h-24 text-xl hover:border-accent hover:bg-accent/5 transition-all rounded-[1.5rem] border-2 flex flex-col gap-1 items-center justify-center font-black group relative overflow-hidden"
                     onClick={() => handleAnswer(option)}
                   >
-                    <span className="text-xs text-muted-foreground group-hover:text-primary/70">{idx + 1}. Option</span>
-                    <span className="font-semibold">{option}</span>
+                    <span className="text-[10px] text-gray-400 absolute top-3 left-4">OPTION {idx + 1}</span>
+                    <span>{option}</span>
                   </Button>
                 ))}
               </div>
             </CardContent>
-            <CardFooter className="bg-muted/30 py-4 flex justify-center border-t">
-              <p className="text-sm text-muted-foreground italic">매일 새로운 퀴즈가 업데이트 됩니다.</p>
-            </CardFooter>
           </Card>
 
-          {/* QT Section */}
-          <div className="space-y-6">
-            <div className="flex items-center gap-3">
-              <div className="bg-primary p-2 rounded-lg text-white">
-                <BookOpen className="w-5 h-5" />
-              </div>
-              <h2 className="text-2xl font-bold font-headline">Latest QT</h2>
+          {/* Info Section */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="p-8 rounded-[2rem] bg-accent/10 border border-accent/20 space-y-4">
+              <h3 className="text-xl font-black flex items-center gap-2">
+                <CheckCircle2 className="text-accent" /> 포인트 획득 팁
+              </h3>
+              <ul className="space-y-2 text-sm font-bold text-gray-600">
+                <li>• 퀴즈 정답 시 100포인트!</li>
+                <li>• 연속 참여 시 보너스 바이브!</li>
+                <li>• 포인트는 상점에서 즉시 사용 가능</li>
+              </ul>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {qtDatabase.map(qt => (
-                <Card key={qt.id} className="border-none shadow-md hover:shadow-lg transition-all group">
-                  <CardHeader className="p-5">
-                    <Badge className="mb-2 bg-primary/10 text-primary border-none hover:bg-primary/20">{qt.category}</Badge>
-                    <CardTitle className="text-xl group-hover:text-primary transition-colors">{qt.title}</CardTitle>
-                  </CardHeader>
-                  <CardContent className="p-5 pt-0">
-                    <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3">{qt.description}</p>
-                  </CardContent>
-                  <CardFooter className="p-5 pt-0">
-                    <Button variant="link" className="p-0 h-auto text-xs flex items-center gap-1 group-hover:gap-2 transition-all">
-                      Read More <ChevronRight className="w-3 h-3" />
-                    </Button>
-                  </CardFooter>
-                </Card>
-              ))}
+            <div className="p-8 rounded-[2rem] bg-primary/10 border border-primary/20 space-y-4">
+              <h3 className="text-xl font-black flex items-center gap-2">
+                <BookOpen className="text-primary" /> 말씀 바이브란?
+              </h3>
+              <p className="text-sm font-bold text-gray-600 leading-relaxed">
+                단순한 지식이 아니라, 내 삶에 녹아든 하나님의 멋을 체크하는 시간이야!
+              </p>
             </div>
           </div>
         </div>
 
-        {/* Right Section: Store */}
-        <div className="space-y-8">
-          <div className="flex items-center gap-3">
-             <div className="bg-blue-500 p-2 rounded-lg text-white">
-                <ShoppingBag className="w-5 h-5" />
-             </div>
-             <h2 className="text-2xl font-bold font-headline">Store</h2>
-          </div>
-          
+        {/* Store Sidebar */}
+        <div className="space-y-6">
+          <h2 className="text-3xl font-black tracking-tighter flex items-center gap-2">
+            <ShoppingBag className="text-primary" /> Vibe Shop
+          </h2>
           <div className="space-y-4">
-            {shopItems.map(item => (
-              <Card key={item.id} className="group overflow-hidden border-none shadow-sm hover:shadow-xl transition-all relative">
-                {item.badge && (
-                  <div className="absolute top-0 right-0">
-                    <div className="bg-accent text-accent-foreground text-[10px] font-bold px-3 py-1 rounded-bl-lg uppercase tracking-wider">
-                      {item.badge}
-                    </div>
+            {SHOP_ITEMS.map(item => (
+              <Card key={item.id} className="group overflow-hidden border-none shadow-xl hover:shadow-2xl transition-all rounded-[2rem]">
+                <CardHeader className="p-6">
+                  <div className="flex justify-between items-start mb-1">
+                    <CardTitle className="text-xl font-black italic">{item.name}</CardTitle>
+                    {item.badge && <Badge className="bg-accent text-white font-black text-[10px]">{item.badge}</Badge>}
                   </div>
-                )}
-                <CardHeader className="p-5 pb-3">
-                  <div className="flex justify-between items-start">
-                    <div className="space-y-1">
-                      <CardTitle className="text-lg">{item.name}</CardTitle>
-                      <CardDescription className="text-xs leading-snug">{item.feature}</CardDescription>
-                    </div>
-                  </div>
+                  <CardDescription className="font-bold text-gray-400">{item.desc}</CardDescription>
                 </CardHeader>
-                <CardContent className="p-5 pt-0 flex items-center justify-between">
-                  <div className="font-bold text-xl text-primary">{item.price}</div>
-                  <Button className="rounded-xl px-6 bg-primary hover:bg-primary/90 shadow-md group-hover:translate-y-[-2px] transition-transform">
-                    구매하기
-                  </Button>
-                </CardContent>
+                <CardFooter className="p-6 pt-0 flex items-center justify-between">
+                  <div className="font-black text-2xl text-primary italic">{item.price}</div>
+                  <Button className="rounded-2xl px-8 bg-black hover:bg-gray-800 shadow-lg font-black group-hover:-translate-y-1 transition-transform">Buy</Button>
+                </CardFooter>
               </Card>
             ))}
-          </div>
-
-          {/* Info Card */}
-          <div className="p-8 rounded-3xl bg-gradient-to-br from-primary/10 to-accent/10 border border-primary/20 shadow-inner relative overflow-hidden group">
-            <div className="absolute -right-4 -bottom-4 opacity-5 group-hover:scale-110 transition-transform duration-700">
-               <Trophy className="w-32 h-32" />
-            </div>
-            <h3 className="font-bold text-lg mb-3 flex items-center gap-2">
-               <CheckCircle2 className="w-5 h-5 text-primary" />
-               포인트 안내
-            </h3>
-            <ul className="space-y-2 text-sm text-muted-foreground relative z-10">
-              <li>• 퀴즈 정답 시 10 포인트가 지급됩니다.</li>
-              <li>• 하루 최대 3번까지 퀴즈에 참여 가능합니다.</li>
-              <li>• 획득한 포인트는 유효기간이 없습니다.</li>
-            </ul>
           </div>
         </div>
       </div>
