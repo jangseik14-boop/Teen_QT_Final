@@ -1,9 +1,8 @@
 
-# Firebase App Hosting 설정
 runConfig:
   minInstances: 0
   maxInstances: 5
-  memoryMiB: 1024
+  memoryMiB: 2048
   cpu: 1
 
 env:
