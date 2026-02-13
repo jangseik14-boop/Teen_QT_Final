@@ -13,6 +13,6 @@ env:
   - variable: GEMINI_API_KEY
     value: "AIzaSyC2ArqCoWfqaR45OwCGKTaAeRwSZoVQjvU"
   - variable: NODE_OPTIONS
-    value: "--max-old-space-size=3072"
+    value: "--max-old-space-size=3584"
   - variable: NEXT_TELEMETRY_DISABLED
     value: "1"
