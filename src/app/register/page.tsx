@@ -34,14 +34,22 @@ export default function RegisterPage() {
       return;
     }
 
+    if (formData.password.length < 6) {
+      toast({ title: "비밀번호 오류", description: "비밀번호는 최소 6자 이상이어야 합니다.", variant: "destructive" });
+      return;
+    }
+
     setLoading(true);
     try {
+      // 1. Firebase Auth 계정 생성
       const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
       const user = userCredential.user;
 
+      // 2. 프로필 이름 업데이트
       await updateProfile(user, { displayName: formData.name });
 
-      // Firestore에 사용자 프로필 생성
+      // 3. Firestore에 사용자 상세 프로필 저장
+      // Auth 생성 직후 세션이 잡히므로 rules의 isOwner 조건 충족 가능
       await setDoc(doc(firestore, "users", user.uid), {
         id: user.uid,
         displayName: formData.name,
@@ -54,14 +62,17 @@ export default function RegisterPage() {
         updatedAt: new Date().toISOString()
       });
 
-      toast({ title: "환영합니다!", description: "회원가입이 완료되었습니다. 이제 묵상을 시작해보세요!" });
+      toast({ title: "환영합니다! 🎉", description: "회원가입이 완료되었습니다. 묵상을 시작해봐요!" });
       router.push('/dashboard');
     } catch (error: any) {
       console.error("가입 실패 상세:", error);
       let message = "회원가입 중 오류가 발생했습니다.";
-      if (error.code === 'auth/email-already-in-use') message = "이미 사용 중인 이메일입니다.";
-      if (error.code === 'auth/weak-password') message = "비밀번호는 최소 6자 이상이어야 합니다.";
-      if (error.code === 'auth/invalid-email') message = "올바른 이메일 형식이 아닙니다.";
+      
+      // 구체적인 에러 메시지 처리
+      if (error.code === 'auth/email-already-in-use') message = "이미 가입된 이메일입니다.";
+      if (error.code === 'auth/invalid-email') message = "이메일 형식이 올바르지 않습니다.";
+      if (error.code === 'auth/operation-not-allowed') message = "Firebase에서 이메일 로그인이 비활성화되어 있습니다. 관리자에게 문의하세요.";
+      if (error.code === 'permission-denied') message = "데이터 저장 권한이 없습니다. 잠시 후 다시 시도해주세요.";
       
       toast({ title: "가입 실패", description: message, variant: "destructive" });
       setLoading(false);
@@ -133,7 +144,7 @@ export default function RegisterPage() {
 
               <div className="space-y-2">
                 <Input 
-                  placeholder="아이디 (이메일)" 
+                  placeholder="이메일 주소" 
                   className="h-14 bg-[#F8FAFC] border-[#F1F5F9] rounded-2xl px-6 focus-visible:ring-[#C026D3]/20"
                   value={formData.email}
                   onChange={(e) => setFormData({...formData, email: e.target.value})}
@@ -143,7 +154,7 @@ export default function RegisterPage() {
               <div className="space-y-2">
                 <Input 
                   type="password" 
-                  placeholder="비밀번호" 
+                  placeholder="비밀번호 (6자 이상)" 
                   className="h-14 bg-[#F8FAFC] border-[#F1F5F9] rounded-2xl px-6 focus-visible:ring-[#C026D3]/20"
                   value={formData.password}
                   onChange={(e) => setFormData({...formData, password: e.target.value})}
@@ -155,7 +166,7 @@ export default function RegisterPage() {
                 disabled={loading}
                 className="w-full h-16 text-lg font-bold rounded-2xl bg-gradient-to-r from-[#A855F7] to-[#EC4899] hover:opacity-90 transition-opacity shadow-lg shadow-purple-200 mt-4"
               >
-                {loading ? "가입 중..." : "회원가입"}
+                {loading ? "가입 진행 중..." : "회원가입 완료"}
               </Button>
             </form>
 
@@ -164,7 +175,7 @@ export default function RegisterPage() {
                 href="/" 
                 className="text-sm font-medium text-gray-400 hover:text-gray-600 underline underline-offset-4 decoration-gray-300"
               >
-                로그인하기
+                이미 계정이 있나요? 로그인하기
               </Link>
             </div>
           </CardContent>
