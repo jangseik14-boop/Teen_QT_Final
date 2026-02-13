@@ -1,16 +1,10 @@
+
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "teen-qt-final",
-  "main": ".vercel/output/static/_worker.js",
   "compatibility_date": "2024-11-18",
   "compatibility_flags": [
     "nodejs_compat"
   ],
-  "assets": {
-    "directory": ".vercel/output/static",
-    "binding": "ASSETS"
-  },
-  "observability": {
-    "enabled": true
-  }
+  "pages_build_output_dir": ".vercel/output"
 }
