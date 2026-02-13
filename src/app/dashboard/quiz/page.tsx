@@ -6,13 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Sparkles, BookOpen, ShoppingBag, CheckCircle2, ChevronRight } from 'lucide-react';
 import { toast } from "@/hooks/use-toast";
 
-/**
- * [수정 사항] 
- * 데이터 변수들을 App 컴포넌트 외부(전역 스코프)로 이동시켰습니다.
- * 이렇게 함으로써 컴포넌트가 리렌더링될 때 데이터가 불필요하게 재선언되지 않으며,
- * 스코프 관련 에러를 방지할 수 있습니다.
- */
-
 const qtDatabase = [
   { 
     id: "qt-1", 
@@ -101,7 +94,6 @@ export default function QuizApp() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-8">
-          {/* Quiz Section */}
           <Card className="border-none shadow-sm bg-accent/5 overflow-hidden">
             <CardHeader className="border-b bg-background/50">
               <div className="flex items-center justify-between">
@@ -133,7 +125,6 @@ export default function QuizApp() {
             </CardContent>
           </Card>
 
-          {/* QT Database Section */}
           <div className="space-y-4">
             <div className="flex items-center gap-2">
               <BookOpen className="text-primary w-5 h-5" />
@@ -156,7 +147,6 @@ export default function QuizApp() {
         </div>
 
         <div className="space-y-6">
-          {/* Shop Section */}
           <div className="flex items-center gap-2">
             <ShoppingBag className="text-blue-500 w-5 h-5" />
             <h2 className="text-xl font-bold font-headline">Store</h2>
